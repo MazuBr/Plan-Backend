@@ -16,7 +16,6 @@ CREATE TABLE users (
     deleted_at BIGINT
 );
 
-
 CREATE TABLE roles (
     id SMALLSERIAL PRIMARY KEY,
     name user_roles UNIQUE NOT NULL
