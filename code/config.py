@@ -10,3 +10,6 @@ DB_CONF = {
     'host': getenv('PSQL_HOST'),
     'port': getenv('PSQL_PORT'),
 }
+
+SECRET_KEY = getenv("TOKEN_SECRET_KEY")
+ALGORITHM = getenv("TOKEN_ALGORITHM")
