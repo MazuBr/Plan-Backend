@@ -1,8 +1,9 @@
 import datetime
 
-from models.Users import TokenData
+from models.users import TokenData
 from config import SECRET_KEY, ALGORITHM
 
+import bcrypt
 import jwt
 
 def generate_token(user_id: int) -> TokenData:
@@ -15,3 +16,7 @@ def generate_token(user_id: int) -> TokenData:
         refresh_token=refresh_token,
         expires_in=3600
     )
+
+
+def hash_pass(password: str) -> str:
+    return bcrypt.hashpw(password=password.encode('utf-8'), salt=bcrypt.gensalt()).decode('utf-8')
