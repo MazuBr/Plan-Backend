@@ -1,7 +1,6 @@
-import json
 from typing import Any, Dict, List
 
-from psycopg2 import connect, sql, DatabaseError, IntegrityError, errors
+from psycopg2 import connect, DatabaseError, IntegrityError, errors
 from psycopg2.extensions import connection as Connection, cursor as Cursor
 from psycopg2.extras import RealDictCursor
 
@@ -24,10 +23,11 @@ class Database:
         
         except errors.UniqueViolation as unique_error:
             self.connection.rollback()
-            raise unique_error
+            print('db_connector, 26: ', unique_error)
+            return 'email or login already used'
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
-            print(error)
+            print('db_connector, 30: ', error)
             return 'Server error'
         
         finally:
