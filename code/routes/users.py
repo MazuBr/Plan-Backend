@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-from models.users import UserCreate, UserResponse
+from exceptions.users import *
 from logic.auth import generate_token, hash_pass
 from logic.auto_gen_sqls import auto_gen
-from logic.db_connector import Database
-from exceptions.users import *
+from logic.postgres_connection import Database
+from models.users import UserCreate, UserResponse
+from logic.redis_connection import cache_user_token, get_cached_user_token
 
 user_router = APIRouter()
 
@@ -23,18 +24,22 @@ async def create_user(user: UserCreate):
     
     db_response = db.fetch_all(query=query, params=user_data)
 
-    if db_response is list:
+    if isinstance(db_response, list):
         pass
-    elif 'users_username_key' == db_response.diag.constraint_name:
-        raise UsernameAlreadyExistsException
-    elif 'users_email_key' == db_response.diag.constraint_name:
-        raise EmailAlreadyExistsException
     else:
-        raise UnknownRegistrationErrorException
+        if 'users_username_key' == db_response.diag.constraint_name:
+            raise UsernameAlreadyExistsException
+        elif 'users_email_key' == db_response.diag.constraint_name:
+            raise EmailAlreadyExistsException
+        else:
+            raise UnknownRegistrationErrorException
     
     new_user = db_response[0]
 
     token_data = generate_token(new_user.get('id'))
+
+    cache_user_token(new_user.get('id'), token_data=token_data)
+
     return UserResponse(id=new_user.get('id'),
                 username=new_user.get('username'),
                 email=new_user.get('email'),
