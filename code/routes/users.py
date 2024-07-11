@@ -4,12 +4,9 @@ from models.users import UserCreate, UserResponse
 from logic.auth import generate_token, hash_pass
 from logic.auto_gen_sqls import auto_gen
 from logic.db_connector import Database
-
-from psycopg2.errors import UniqueViolation
+from exceptions.users import *
 
 user_router = APIRouter()
-
-
 
 @user_router.post("/create", response_model=UserResponse)
 async def create_user(user: UserCreate):
@@ -27,14 +24,13 @@ async def create_user(user: UserCreate):
     db_response = db.fetch_all(query=query, params=user_data)
 
     if db_response is list:
-        print('ищу: ', db_response)
+        pass
     elif 'users_username_key' == db_response.diag.constraint_name:
-        raise HTTPException(status_code=400, detail='Username already exists')
+        raise UsernameAlreadyExistsException
     elif 'users_email_key' == db_response.diag.constraint_name:
-        raise HTTPException(status_code=400, detail='Email already exists')
+        raise EmailAlreadyExistsException
     else:
-        print('db_response: ', type(db_response))
-        raise HTTPException(status_code=400, detail='unknown error during registration')
+        raise UnknownRegistrationErrorException
     
     new_user = db_response[0]
 
