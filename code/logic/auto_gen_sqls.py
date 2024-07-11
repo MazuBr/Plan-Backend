@@ -1,11 +1,10 @@
 from psycopg2 import sql
 
-def auto_gen(data: dict, query: str):
+def auto_gen(data: dict, query: str) -> sql.SQL:
     columns = data.keys()
     placeholders = [f"%({column})s" for column in columns]
-    result = sql.SQL(query.format(
+    result = sql.SQL(query).format(
         fields=sql.SQL(', ').join(map(sql.Identifier, columns)),
-        values=sql.SQL(', ').join(map(sql.SQL, placeholders))
-    ))
-    print('auto_gen_sqls. str 9. sql query after autocreate query: ', result)
+        values=sql.SQL(', ').join(sql.SQL(placeholder) for placeholder in placeholders)
+    )
     return result
