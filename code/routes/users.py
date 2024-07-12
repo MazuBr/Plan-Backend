@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordBearer
 
 from exceptions.users import *
-from logic.auth import generate_token, hash_pass, verify_password
+from logic.auth import decode_token, generate_token, hash_pass, verify_password
 from logic.auto_gen_sqls import auto_gen
 from logic.postgres_connection import Database
 from models.users import *
 from logic.redis_connection import cache_user_token, remove_cache_user_token
 
 user_router = APIRouter()
+aouth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 @user_router.post("/create", response_model=UserResponse)
 async def create_user(user: UserCreate):
@@ -66,6 +68,9 @@ async def login(user: LoginRequest):
     return token_data
 
 @user_router.post("/logout", response_model=LogoutResponse)
-async def logout_user(user: LogoutRequest):
-    remove_cache_user_token(user.user_id)
+async def logout_user(token: str = Depends(aouth2_scheme)):
+    user_id = decode_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    remove_cache_user_token(user_id=user_id)
     return LogoutResponse(detail="Successfully logged out")
