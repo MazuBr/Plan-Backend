@@ -32,12 +32,6 @@ def generate_token(user_id: str) -> TokenData:
         expires_in=int(access_expires_delta.total_seconds())
     )
 
-def hash_pass(password: str) -> str:
-    return bcrypt.hashpw(password=password.encode('utf-8'), salt=bcrypt.gensalt()).decode('utf-8')
-
-def check_hash_pass(password: str, check_password: str) -> bool:
-    return bcrypt.checkpw(check_password.encode('utf-8'), password.encode('utf-8'))
-
 def refresh_token(refresh_token: str) -> TokenData:
     try:
         decoded_refresh_token = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -48,6 +42,20 @@ def refresh_token(refresh_token: str) -> TokenData:
         raise Exception("Invalid refresh token")
 
     return generate_token(user_id)
+
+def decode_token(token: str) -> int:
+    try:
+        user_id = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("user_id")
+        return user_id
+    except jwt.InvalidTokenError:
+        return None
+
+
+def hash_pass(password: str) -> str:
+    return bcrypt.hashpw(password=password.encode('utf-8'), salt=bcrypt.gensalt()).decode('utf-8')
+
+def check_hash_pass(password: str, check_password: str) -> bool:
+    return bcrypt.checkpw(check_password.encode('utf-8'), password.encode('utf-8'))
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
