@@ -66,7 +66,6 @@ async def login(user: LoginRequest):
     return token_data
 
 @user_router.post("/logout", response_model=LogoutResponse)
-async def logout_user(user: LogoutRequest, authorization: str = Header(None)):
-    token = authorization.split(" ")[1]
+async def logout_user(user: LogoutRequest):
     remove_cache_user_token(user.user_id)
     return LogoutResponse(detail="Successfully logged out")
