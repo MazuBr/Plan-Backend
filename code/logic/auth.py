@@ -6,15 +6,30 @@ from config import SECRET_KEY, ALGORITHM
 import bcrypt
 import jwt
 
-def generate_token(user_id: int) -> TokenData:
-    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
-    token = jwt.encode({"user_id": user_id, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
-    refresh_expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
-    refresh_token = jwt.encode({"user_id": user_id, "exp": refresh_expire}, SECRET_KEY, algorithm=ALGORITHM)
+def generate_token(user_id: str) -> TokenData:
+    access_expires_delta = datetime.timedelta(minutes=15)
+    access_expires = datetime.datetime.utcnow() + access_expires_delta
+
+    refresh_expires_delta = datetime.timedelta(hours=2)
+    refresh_expires = datetime.datetime.utcnow() + refresh_expires_delta
+
+    access_token_payload = {
+        "user_id": user_id,
+        "exp": access_expires
+    }
+
+    refresh_token_payload = {
+        "user_id": user_id,
+        "exp": refresh_expires
+    }
+
+    token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+    refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
+
     return TokenData(
         token=token,
         refresh_token=refresh_token,
-        expires_in=3600
+        expires_in=int(access_expires_delta.total_seconds())
     )
 
 def refresh_token(refresh_token: str) -> TokenData:
@@ -36,6 +51,11 @@ def decode_token(token: str) -> int:
             return None
         return user_id
     except jwt.PyJWTError:
+
+        user_id = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("user_id")
+        return user_id
+    except jwt.InvalidTokenError:
+      
         return None
 
 

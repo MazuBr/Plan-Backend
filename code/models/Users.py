@@ -40,4 +40,3 @@ class LogoutRequest(BaseModel):
 
 class LogoutResponse(BaseModel):
     detail: str
-
