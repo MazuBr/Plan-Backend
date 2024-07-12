@@ -1,15 +1,8 @@
-<<<<<<< Updated upstream
-from fastapi import APIRouter
-
-from exceptions.users import *
-from logic.auth import generate_token, hash_pass
-=======
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from exceptions.users import *
 from logic.auth import  decode_token, generate_token, hash_pass, verify_password
->>>>>>> Stashed changes
 from logic.auto_gen_sqls import auto_gen
 from logic.postgres_connection import Database
 from models.users import UserCreate, UserResponse

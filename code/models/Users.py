@@ -27,3 +27,17 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     token_data: TokenData
+
+
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str
+
+
+class LogoutRequest(BaseModel):
+    user_id: int
+
+
+class LogoutResponse(BaseModel):
+    detail: str
+
