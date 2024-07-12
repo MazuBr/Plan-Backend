@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-import json 
+
 
 class UsernameAlreadyExistsException(HTTPException):
     def __init__(self):
