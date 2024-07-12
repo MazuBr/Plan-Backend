@@ -20,14 +20,18 @@ app.add_middleware(CORSMiddleware,
 async def token_middleware(request: Request, call_next):
     excluded_paths = ["/user/create", "/user/login", '/docs', '/openapi.json']
 
-    if request.url.path in excluded_paths:
+    if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
 
     token = request.headers.get("Authorization")
-    if not token:
+    if token and token.startswith("Bearer "):
+        token = token.replace("Bearer ", "", 1)
+    else:
         return JSONResponse(status_code=401, content={"detail": "Token required"})
-
-    if not await fetch_token(token):
+    
+    token_data = await fetch_token(token)
+    print(token_data)
+    if not token_data:
         return JSONResponse(status_code=403, content={"detail": "Invalid or expired token"})
 
     return await call_next(request)

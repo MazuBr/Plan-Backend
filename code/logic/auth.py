@@ -45,17 +45,15 @@ def refresh_token(refresh_token: str) -> TokenData:
 
 def decode_token(token: str) -> int:
     try:
+        print('start decode')
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get('user_id')
         if user_id is None:
             return None
-        return user_id
-    except jwt.PyJWTError:
-
+        
         user_id = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("user_id")
         return user_id
-    except jwt.InvalidTokenError:
-      
+    except (jwt.InvalidTokenError, jwt.PyJWTError):
         return None
 
 
