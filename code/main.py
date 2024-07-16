@@ -35,5 +35,6 @@ async def token_middleware(request: Request, call_next):
 
 app.include_router(user_router, prefix='/user', tags=['users'])
 app.openapi = lambda: custom_openapi(app)
+
 if __name__ == '__main__':
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host='127.0.0.1', port=8000, ssl_keyfile='cert/key.pem', ssl_certfile='cert/cer.pem')
