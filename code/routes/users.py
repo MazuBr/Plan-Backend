@@ -84,18 +84,9 @@ async def logout_user(response: Response, credentials: HTTPAuthorizationCredenti
 
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
-async def check_session(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+async def check_session(request: Request, credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     token = credentials.credentials
     if not decode_token(token):
         raise HTTPException(status_code=401, detail="Invalid token")
     return CheckSessionResponse(detail="Token is valid")
 
-
-@user_router.post('/refresh-token')
-async def refresh_token(request: Request):
-    access_token = request.cookies.get('access_token')
-    if access_token:
-        print(access_token)
-    else:
-        print('Токена нет')
-    return None
