@@ -1,10 +1,11 @@
 import datetime
 
-from models.users import TokenData
-from config import SECRET_KEY, ALGORITHM
-
+from fastapi import Response
 import bcrypt
 import jwt
+
+from models.users import TokenData
+from config import SECRET_KEY, ALGORITHM
 
 def generate_token(user_id: str) -> TokenData:
     access_expires_delta = datetime.timedelta(minutes=15)
@@ -45,17 +46,15 @@ def refresh_token(refresh_token: str) -> TokenData:
 
 def decode_token(token: str) -> int:
     try:
+        print('start decode')
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get('user_id')
         if user_id is None:
             return None
-        return user_id
-    except jwt.PyJWTError:
-
+        
         user_id = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("user_id")
         return user_id
-    except jwt.InvalidTokenError:
-      
+    except (jwt.InvalidTokenError, jwt.PyJWTError):
         return None
 
 
@@ -67,3 +66,14 @@ def check_hash_pass(password: str, check_password: str) -> bool:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+def set_active_auth_coockie(response: Response, token_data: TokenData) -> None:
+    response.set_cookie(key='access-token', value=token_data.token, httponly=True, samesite=None, max_age=1000)
+    response.set_cookie(key='refresh-token', value=token_data.refresh_token, httponly=True, samesite=None, max_age=1000)
+    return None
+
+def set_unactive_auth_coockie(response: Response) -> None:
+    response.set_cookie(key='access-token', value='', httponly=True, max_age=0)
+    response.set_cookie(key='refresh-token', value='', httponly=True, max_age=0)
+    return None
