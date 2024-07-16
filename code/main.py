@@ -10,7 +10,7 @@ from routes.users import user_router
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,18 +23,14 @@ async def token_middleware(request: Request, call_next):
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
 
-    token = request.headers.get("Authorization")
-    if token and token.startswith("Bearer "):
-        token = token.replace("Bearer ", "", 1)
-    else:
-        return JSONResponse(status_code=401, content={"detail": "Token required"})
+    token = request.cookies.get("access-token")
     
     token_data = await fetch_token(token)
     if token_data == 'Token expired':
         return JSONResponse(status_code=401, content={'detail': 'Token expire'})
     if not token_data or token_data == 'Invalid token':
-        return JSONResponse(status_code=403, content={"detail": "Invalid token"})
-
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    print('middleware success')
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
