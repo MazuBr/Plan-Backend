@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Request
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from exceptions.users import *
 
@@ -12,8 +12,7 @@ from models.users import *
 from logic.redis_connection import cache_user_token, remove_cache_user_token
 
 user_router = APIRouter()
-aouth2_scheme = OAuth2PasswordBearer(tokenUrl='access-token')
-aouth2_refresh_scheme = OAuth2PasswordBearer(tokenUrl='refresh-token')
+auth_scheme = HTTPBearer()
 
 @user_router.post("/create", response_model=UserResponse)
 async def create_user(response: Response, user: UserCreate):
@@ -51,8 +50,7 @@ async def create_user(response: Response, user: UserCreate):
                 first_name=new_user.get('first_name'),
                 last_name=new_user.get('last_name'),
                 phone=new_user.get('phone'),
-                address=new_user.get('address'),
-                token_data=token_data, )
+                address=new_user.get('address'),)
 
 
 @user_router.post("/login", response_model=TokenData)
@@ -75,13 +73,22 @@ async def login(response: Response, user: LoginRequest):
 
 
 @user_router.post("/logout", response_model=LogoutResponse)
-async def logout_user(response: Response, token: str = Depends(aouth2_scheme)):
+async def logout_user(response: Response, credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+    token = credentials.credentials
     user_id = decode_token(token)
-    set_unactive_auth_coockie(response=response)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
+    set_unactive_auth_coockie(response=response)
     remove_cache_user_token(user_id=user_id)
     return LogoutResponse(detail="Successfully logged out")
+
+
+@user_router.post("/check-session", response_model=CheckSessionResponse)
+async def check_session(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+    token = credentials.credentials
+    if not decode_token(token):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return CheckSessionResponse(detail="Token is valid")
 
 
 @user_router.post('/refresh-token')
