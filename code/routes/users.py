@@ -73,8 +73,8 @@ async def login(response: Response, user: LoginRequest):
 
 
 @user_router.post("/logout", response_model=LogoutResponse)
-async def logout_user(response: Response, credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    token = credentials.credentials
+async def logout_user(request: Request, response: Response):
+    token = request.cookies.get("access-token")
     user_id = decode_token(token)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -84,9 +84,10 @@ async def logout_user(response: Response, credentials: HTTPAuthorizationCredenti
 
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
-async def check_session(request: Request, credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    token = credentials.credentials
-    if not decode_token(token):
+async def check_session(request: Request):
+    token = request.cookies.get("access-token")
+    
+    if not token or not decode_token(token):
         raise HTTPException(status_code=401, detail="Invalid token")
     return CheckSessionResponse(detail="Token is valid")
 
