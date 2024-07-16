@@ -9,10 +9,10 @@ from config import SECRET_KEY, ALGORITHM
 
 def generate_token(user_id: str) -> TokenData:
     access_expires_delta = datetime.timedelta(minutes=15)
-    access_expires = datetime.datetime.utcnow() + access_expires_delta
+    access_expires = datetime.datetime.now(datetime.UTC) + access_expires_delta
 
     refresh_expires_delta = datetime.timedelta(hours=2)
-    refresh_expires = datetime.datetime.utcnow() + refresh_expires_delta
+    refresh_expires = datetime.datetime.now(datetime.UTC) + refresh_expires_delta
 
     access_token_payload = {
         "user_id": user_id,
