@@ -5,7 +5,7 @@ services:
     build:
       context: ./proxy
       dockerfile: Dockerfile
-    image: nginx:latest
+    image: "${DOCKER_USERNAME}/custom-nginx:latest"
     ports:
       - "443:443"
     volumes:
@@ -18,10 +18,10 @@ services:
     build:
       context: ./code
       dockerfile: Dockerfile
-    image: matvsuzu/plan-backend:latest
+    image: "matvsuzu/plan-backend:latest"
     command: python main.py
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
     depends_on:
       - db
 
