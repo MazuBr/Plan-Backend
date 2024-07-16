@@ -30,9 +30,10 @@ async def token_middleware(request: Request, call_next):
         return JSONResponse(status_code=401, content={"detail": "Token required"})
     
     token_data = await fetch_token(token)
-    print(token_data)
-    if not token_data:
-        return JSONResponse(status_code=403, content={"detail": "Invalid or expired token"})
+    if token_data == 'Token expired':
+        return JSONResponse(status_code=401, content={'detail': 'Token expire'})
+    if not token_data or token_data == 'Invalid token':
+        return JSONResponse(status_code=403, content={"detail": "Invalid token"})
 
     return await call_next(request)
 
