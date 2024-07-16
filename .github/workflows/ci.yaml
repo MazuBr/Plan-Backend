@@ -58,12 +58,10 @@ jobs:
 
       - name: Build and push Docker image using Docker Compose
         run: |
-          source .env
           docker-compose -f docker-compose.prod.yml build
           docker-compose -f docker-compose.prod.yml push
 
       - name: Deploy with Docker Compose
         run: |
-          source .env
           docker-compose -f docker-compose.prod.yml down
           docker-compose -f docker-compose.prod.yml up -d
