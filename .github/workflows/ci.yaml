@@ -56,6 +56,18 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.PSQL_PWD }}" >> .env
           echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
 
+      - name: Debug environment variables
+        run: |
+          echo $DOCKER_USERNAME
+          echo $POSTGRES_DB
+          echo $POSTGRES_USER
+          echo $POSTGRES_PASSWORD
+        env:
+          POSTGRES_DB: ${{ secrets.PSQL_DB }}
+          POSTGRES_USER: ${{ secrets.PSQL_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PSQL_PWD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          
       - name: Build and push Docker image using Docker Compose
         run: |
           docker-compose -f docker-compose.prod.yml build
