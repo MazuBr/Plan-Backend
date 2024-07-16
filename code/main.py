@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
+from openapi.custom_locations import custom_openapi
 import uvicorn
 
 from middleware.token import fetch_token 
@@ -38,6 +38,6 @@ async def token_middleware(request: Request, call_next):
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
-
+app.openapi = lambda: custom_openapi(app)
 if __name__ == '__main__':
     uvicorn.run(app, host='127.0.0.1', port=8000)

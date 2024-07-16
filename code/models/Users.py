@@ -26,7 +26,6 @@ class UserResponse(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
-    token_data: TokenData
 
 
 class LoginRequest(BaseModel):
@@ -39,4 +38,7 @@ class LogoutRequest(BaseModel):
 
 
 class LogoutResponse(BaseModel):
+    detail: str
+
+class CheckSessionResponse(BaseModel):
     detail: str
