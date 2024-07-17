@@ -34,8 +34,9 @@ async def token_middleware(request: Request, call_next):
     refresh_token_data = await fetch_refresh_token(refresh_token)
     if token_data in token_errors:
         if refresh_token_data:
-            response = await call_next(request)
+            response = Response()
             update_token(refresh_token, response)
+            response = await call_next(request)
             return response 
         return JSONResponse(status_code=401, content={'detail': token_data})
 
