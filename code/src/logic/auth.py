@@ -8,7 +8,7 @@ from src.models.users import TokenData
 from src.config import SECRET_KEY, ALGORITHM
 
 def generate_token(user_id: str) -> TokenData:
-    access_expires_delta = datetime.timedelta(minutes=15)
+    access_expires_delta = datetime.timedelta(minutes=1)
     access_expires = datetime.datetime.now(datetime.UTC) + access_expires_delta
 
     refresh_expires_delta = datetime.timedelta(hours=2)

@@ -26,6 +26,7 @@ async def token_middleware(request: Request, call_next):
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
     token_errors = ('Invalid token', 'Token expired')
+    
     token = request.cookies.get("access-token")
     refresh_token = request.cookies.get('refresh-token')
 
