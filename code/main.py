@@ -7,7 +7,10 @@ from src.config import PORT
 from src.middleware.token import fetch_token
 from src.routes.users import user_router
 
-app = FastAPI(root_path="/api")
+
+BASE_PATH = '/api'
+
+app = FastAPI(root_path=BASE_PATH)
 app.add_middleware(CORSMiddleware,
     allow_origins=['*'],
     allow_credentials=True,
@@ -17,7 +20,8 @@ app.add_middleware(CORSMiddleware,
 
 @app.middleware("http")
 async def token_middleware(request: Request, call_next):
-    excluded_paths = ["/user/create", "/user/login", '/docs', '/openapi.json']
+    paths = ["/user/create", "/user/login", '/docs', '/openapi.json']
+    excluded_paths = [BASE_PATH + path for path in paths]
 
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
