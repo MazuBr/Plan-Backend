@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, Union
 
 
 class UserCreate(BaseModel):
@@ -29,8 +29,8 @@ class UserResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    identifier: str
-    password: str
+    identifier: Union[str, EmailStr]
+    password: str = Field(..., min_length=8)
 
 
 class LogoutRequest(BaseModel):

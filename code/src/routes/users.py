@@ -13,7 +13,7 @@ from src.logic.redis_connection import cache_user_token, remove_cache_user_token
 user_router = APIRouter()
 auth_scheme = HTTPBearer()
 
-@user_router.post("/create", response_model=UserResponse, tags=['login'])
+@user_router.post("/create", response_model=UserResponse)
 async def create_user(response: Response, user: UserCreate):
     db = Database()
     new_user = dict
@@ -52,7 +52,7 @@ async def create_user(response: Response, user: UserCreate):
                 address=new_user.get('address'),)
 
 
-@user_router.post("/login", response_model=TokenData, tags=['login'])
+@user_router.post("/login", response_model=TokenData)
 async def login(response: Response, user: LoginRequest):
     db = Database()
     query = "SELECT * FROM users WHERE username = %(identifier)s OR email = %(identifier)s"
@@ -71,7 +71,7 @@ async def login(response: Response, user: LoginRequest):
     return token_data
 
 
-@user_router.post("/logout", response_model=LogoutResponse, tags=['login'])
+@user_router.post("/logout", response_model=LogoutResponse)
 async def logout_user(request: Request, response: Response):
     token = request.cookies.get("access-token")
     user_id = decode_token(token)
@@ -82,7 +82,7 @@ async def logout_user(request: Request, response: Response):
     return LogoutResponse(detail="Successfully logged out")
 
 
-@user_router.post("/check-session", response_model=CheckSessionResponse, tags=['session'])
+@user_router.post("/check-session", response_model=CheckSessionResponse)
 async def check_session(request: Request):
     token = request.cookies.get("access-token")
     
