@@ -19,7 +19,7 @@ app.add_middleware(CORSMiddleware,
 )
 
 @app.middleware("http")
-async def token_middleware(response: Response, request: Request, call_next):
+async def token_middleware(request: Request, call_next):
     paths = ["/user/create", "/user/login", '/docs', '/openapi.json']
     excluded_paths = [BASE_PATH + path for path in paths]
 
@@ -31,12 +31,18 @@ async def token_middleware(response: Response, request: Request, call_next):
 
     token_data = await fetch_token(token)
     if token_data == 'Token expired':
-        update_token(refresh_token, response)
-        return JSONResponse(status_code=401, content={'detail': 'Token expire'})
-    if not token_data or token_data == 'Invalid token':
+        response = Response()
+        new_token = update_token(refresh_token, response)
+        if new_token:
+            response = await call_next(request)
+        else:
+            return JSONResponse(status_code=401, content={'detail': 'Token expired'})
+    elif not token_data or token_data == 'Invalid token':
         return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    
     print('middleware success')
-    return await call_next(request, response)
+    response = await call_next(request)
+    return response
 
 app.include_router(user_router, prefix='/user', tags=['users'])
 
