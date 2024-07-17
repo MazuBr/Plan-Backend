@@ -27,6 +27,13 @@ def generate_token(user_id: str) -> TokenData:
     token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
     refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
+    return TokenData(
+        token=token,
+        refresh_token=refresh_token,
+        expires_in=int(access_expires_delta.total_seconds()),
+        expires_refresh_in=int(refresh_expires_delta.total_seconds())
+    )
+
 
 def decode_token(token: str) -> int:
     try:
@@ -41,12 +48,11 @@ def decode_token(token: str) -> int:
         return None
 
 
-async def update_token(refresh_token: str, response: Response) -> TokenData|str:
+async def update_token(refresh_token: str, response: Response) -> None|str:
     try:
         refresh_token: dict = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         token_data = generate_token(refresh_token.get('user_id'))
         set_active_auth_coockie(response=response, token_data=token_data)
-        return token_data
     except jwt.ExpiredSignatureError:
         print("Refresh token expired")
         return 'Refresh token expired'

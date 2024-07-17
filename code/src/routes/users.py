@@ -72,16 +72,16 @@ async def login(response: Response, user: LoginRequest):
 async def logout_user(request: Request, response: Response):
     token = request.cookies.get("access-token")
     user_id = decode_token(token)
+    set_unactive_auth_coockie(response=response)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    set_unactive_auth_coockie(response=response)
     return LogoutResponse(detail="Successfully logged out")
 
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
 async def check_session(request: Request, response: Response):
-    req_token = request.cookies.get("access-token")
-    resp_token = response.set_cookie
+    # req_token = request.cookies.get("access-token")
+    # resp_token = response.set_cookie
     print('request.cookies in check session:', request.cookies)
     print('response check session: ', response.headers)
     return CheckSessionResponse(detail="Token is valid")
