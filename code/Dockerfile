@@ -7,4 +7,4 @@ COPY . /app
 EXPOSE 8000
 ENV PORT 8000
 
-CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port" "$PORT"]
+CMD exec uvicorn main:app --host 0.0.0.0 --port $PORT
