@@ -33,7 +33,7 @@ async def token_middleware(request: Request, call_next):
         token_data = await fetch_token(token)
         if token_data in token_errors:
             return JSONResponse(status_code=401, content={'detail': token_data})
-    elif not token_data:
+    elif not token:
         return JSONResponse(status_code=401, content={'detail': token_data})
     return await call_next(request)
 
