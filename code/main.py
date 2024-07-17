@@ -31,10 +31,10 @@ async def token_middleware(request: Request, call_next):
     if token:
         _, token = token.split(' ')
         token_data = await fetch_token(token)
-
-    if token or token_data in token_errors:
+        if token_data in token_errors:
+            return JSONResponse(status_code=401, content={'detail': token_data})
+    elif not token_data:
         return JSONResponse(status_code=401, content={'detail': token_data})
-
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
