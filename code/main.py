@@ -37,9 +37,9 @@ async def token_middleware(request: Request, call_next):
             response = Response()
             new_token = await update_token(refresh_token, response)
             if not isinstance(new_token, str): 
-                print(response.headers)
                 request.cookies['access-token'] = new_token.token
                 request.cookies['refresh-token'] = new_token.refresh_token
+                print('request.cookies: ', request.cookies)
                 response = await call_next(request)
                 return response 
         return JSONResponse(status_code=401, content={'detail': token_data})

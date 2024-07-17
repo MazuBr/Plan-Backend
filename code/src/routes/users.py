@@ -81,7 +81,8 @@ async def logout_user(request: Request, response: Response):
 @user_router.post("/check-session", response_model=CheckSessionResponse)
 async def check_session(request: Request):
     token = request.cookies.get("access-token")
-    print(token)
+    print('request.cookies in check session:', request.cookies)
+    print('token: ', token)
     
     if not token or not decode_token(token):
         raise HTTPException(status_code=406, detail="Invalid token")
