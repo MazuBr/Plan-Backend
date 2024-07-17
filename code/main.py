@@ -27,10 +27,11 @@ async def token_middleware(request: Request, call_next):
 
     token_errors = ('Invalid token', 'Token expired')
     token: str = request.headers.get("Authorization")
-    _, token = token.split(' ')
-    token_data = await fetch_token(token)
+    if token:
+        _, token = token.split(' ')
+        token_data = await fetch_token(token)
 
-    if token_data in token_errors:
+    if token_data and token_data in token_errors:
         return JSONResponse(status_code=401, content={'detail': token_data})
 
     return await call_next(request)

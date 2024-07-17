@@ -77,10 +77,13 @@ async def refresh_token(request: Request, response: Response):
     token = request.cookies.get("refresh-token")
     user_id = decode_token(token)
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
     token = set_active_auth_coockie(response=response, user_id=user_id)
     return RefreshTokenResponse(detail='Successfull token refresh', access_token=token)
 
+@user_router.post("/refresh-token")
+async def refresh_token():
+    return {'detail': 'aboba'}
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
 async def check_session():
