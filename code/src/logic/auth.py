@@ -48,19 +48,6 @@ def decode_token(token: str) -> int:
         return None
 
 
-async def update_token(refresh_token: str, response: Response) -> None|str:
-    try:
-        refresh_token: dict = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        token_data = generate_token(refresh_token.get('user_id'))
-        set_active_auth_coockie(response=response, token_data=token_data)
-    except jwt.ExpiredSignatureError:
-        print("Refresh token expired")
-        return 'Refresh token expired'
-    except jwt.InvalidTokenError:
-        print("Invalid refresh token")
-        return 'Invalid refresh token'
-
-
 def hash_pass(password: str) -> str:
     return bcrypt.hashpw(password=password.encode('utf-8'), salt=bcrypt.gensalt()).decode('utf-8')
 
@@ -71,14 +58,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
-def set_active_auth_coockie(response: Response, token_data: TokenData) -> None:
-    response.set_cookie(key='access-token', value=token_data.token,
-                         httponly=True, secure=True, samesite='none', max_age=token_data.expires_in)
+def set_active_auth_coockie(response: Response, user_id: int) -> None:
+    token_data = generate_token(user_id=user_id)
+    response.headers["Authorization"] = f"Bearer {token_data.token}"
     response.set_cookie(key='refresh-token', value=token_data.refresh_token,
                          httponly=True, secure=True, samesite='none', max_age=token_data.expires_refresh_in)
     return None
 
 def set_unactive_auth_coockie(response: Response) -> None:
-    response.set_cookie(key='access-token', value='', httponly=True, samesite='none', secure=True, max_age=0)
-    response.set_cookie(key='refresh-token', value='', httponly=True, samesite='none', secure=True, max_age=0)
+    response.headers["Authorization"] = f""
+    response.set_cookie(key='refresh-token')
     return None

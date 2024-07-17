@@ -38,8 +38,7 @@ async def create_user(response: Response, user: UserCreate):
     
     new_user = db_response[0]
 
-    token_data = generate_token(new_user.get('id'))
-    set_active_auth_coockie(response=response, token_data=token_data)
+    set_active_auth_coockie(response=response, user_id=new_user.get('id'))
     
     return UserResponse(id=new_user.get('id'),
                 username=new_user.get('username'),
@@ -50,7 +49,7 @@ async def create_user(response: Response, user: UserCreate):
                 address=new_user.get('address'),)
 
 
-@user_router.post("/login", response_model=AccessTokenData)
+@user_router.post("/login", response_model=LoginRespnse)
 async def login(response: Response, user: LoginRequest):
     db = Database()
     query = "SELECT * FROM users WHERE username = %(identifier)s OR email = %(identifier)s"
@@ -60,23 +59,26 @@ async def login(response: Response, user: LoginRequest):
 
     if not db_user or not verify_password(user.password, db_user.get("password")):
         raise HTTPException(status_code=400, detail="Invalid username or password")
+    user_id = db_user.get("id")
+    set_active_auth_coockie(response=response, user_id=user_id)
 
-    token_data = generate_token(db_user["id"])
-    
-    set_active_auth_coockie(response=response, token_data=token_data)
-
-    return AccessTokenData(token=token_data.token, expires_in=token_data.expires_in)
+    return LoginRespnse(detail='Login successful')
 
 
 @user_router.post("/logout", response_model=LogoutResponse)
-async def logout_user(request: Request, response: Response):
+async def logout_user(response: Response):
     set_unactive_auth_coockie(response=response)
-    print('start_logout')
-    token = request.cookies.get("access-token")
+    return LogoutResponse(detail="Successfully logged out")
+
+
+@user_router.post("/refresh-token", response_model=RefreshTokenResponse)
+async def refresh_token(request: Request, response: Response):
+    token = request.headers.get("refresh-token")
     user_id = decode_token(token)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    return LogoutResponse(detail="Successfully logged out")
+    set_active_auth_coockie(response=response, user_id=user_id)
+    return RefreshTokenResponse(detail='Successfull token refresh')
 
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)

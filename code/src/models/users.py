@@ -11,11 +11,8 @@ class UserCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = None
 
-
-class AccessTokenData(BaseModel):
-    token: str
-    expires_in: int
-
+class LoginRespnse(BaseModel):
+    detail: str
 
 class TokenData(BaseModel):
     token: str
@@ -40,11 +37,16 @@ class LoginRequest(BaseModel):
 
 
 class LogoutRequest(BaseModel):
-    user_id: int
+    user_id: Optional[int]
 
 
 class LogoutResponse(BaseModel):
     detail: str
 
+
 class CheckSessionResponse(BaseModel):
+    detail: str
+
+
+class RefreshTokenResponse(BaseModel):
     detail: str
