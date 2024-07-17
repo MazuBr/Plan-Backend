@@ -27,13 +27,6 @@ def generate_token(user_id: str) -> TokenData:
     token = jwt.encode(access_token_payload, SECRET_KEY, algorithm=ALGORITHM)
     refresh_token = jwt.encode(refresh_token_payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    return TokenData(
-        token=token,
-        refresh_token=refresh_token,
-        expires_in=int(access_expires_delta.total_seconds()),
-        expires_refresh_in=int(refresh_expires_delta.total_seconds())
-    )
-
 
 def decode_token(token: str) -> int:
     try:
