@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = None
 
-class LoginRespnse(BaseModel):
+class LoginResponse(BaseModel):
     detail: str
 
 class TokenData(BaseModel):
