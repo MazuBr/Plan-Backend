@@ -31,7 +31,7 @@ def generate_token(user_id: str) -> TokenData:
         token=token,
         refresh_token=refresh_token,
         expires_in=int(access_expires_delta.total_seconds()),
-        refresh_expires=int(refresh_expires_delta.total_seconds())
+        expires_refresh_in=int(refresh_expires_delta.total_seconds())
     )
 
 def refresh_token(refresh_token: str) -> TokenData:
