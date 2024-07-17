@@ -38,7 +38,6 @@ def generate_token(user_id: str) -> TokenData:
 def decode_token(token: str) -> int:
     try:
         payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print(payload)
         user_id = payload.get('user_id')
         if user_id is None:
             return None
@@ -74,7 +73,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def set_active_auth_coockie(response: Response, token_data: TokenData) -> None:
-    print(token_data)
     response.set_cookie(key='access-token', value=token_data.token,
                          httponly=True, secure=True, samesite='none', max_age=token_data.expires_in)
     response.set_cookie(key='refresh-token', value=token_data.refresh_token,
