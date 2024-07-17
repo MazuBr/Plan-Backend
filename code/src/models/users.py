@@ -16,6 +16,7 @@ class TokenData(BaseModel):
     token: str
     refresh_token: str
     expires_in: int
+    expires_refresh_in: int
 
 
 class UserResponse(BaseModel):

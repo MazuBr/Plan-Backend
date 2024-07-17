@@ -30,7 +30,8 @@ def generate_token(user_id: str) -> TokenData:
     return TokenData(
         token=token,
         refresh_token=refresh_token,
-        expires_in=int(access_expires_delta.total_seconds())
+        expires_in=int(access_expires_delta.total_seconds()),
+        refresh_expires=int(refresh_expires_delta.total_seconds())
     )
 
 def refresh_token(refresh_token: str) -> TokenData:
@@ -69,8 +70,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def set_active_auth_coockie(response: Response, token_data: TokenData) -> None:
-    response.set_cookie(key='access-token', value=token_data.token, httponly=True, secure=True, samesite='none', max_age=1000)
-    response.set_cookie(key='refresh-token', value=token_data.refresh_token, httponly=True, secure=True, samesite='none', max_age=1000)
+    print(token_data)
+    response.set_cookie(key='access-token', value=token_data.token,
+                         httponly=True, secure=True, samesite='none', max_age=token_data.expires_in)
+    response.set_cookie(key='refresh-token', value=token_data.refresh_token,
+                         httponly=True, secure=True, samesite='none', max_age=token_data.expires_refresh_in)
     return None
 
 def set_unactive_auth_coockie(response: Response) -> None:
