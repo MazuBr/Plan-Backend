@@ -5,6 +5,8 @@ PORT = int(getenv("PORT", 8000))
 
 load_dotenv()
 
+DATABASE_URL = getenv('DATABASE_URL')
+
 DB_CONF = {
     'dbname': getenv('PSQL_DB'),
     'user': getenv('PSQL_USER'),

@@ -4,12 +4,15 @@ from psycopg2 import connect, DatabaseError, IntegrityError, errors
 from psycopg2.extensions import connection as Connection, cursor as Cursor
 from psycopg2.extras import RealDictCursor
 
-from src.config import DB_CONF
+from src.config import DB_CONF, DATABASE_URL
 
 
 class Database:
     def __init__(self):
-        self.connection: Connection = connect(**DB_CONF)
+        if DATABASE_URL:
+            self.connection: Connection = connect(DATABASE_URL)
+        else:
+            self.connection: Connection = connect(**DB_CONF)
         self.cursor: Cursor = self.connection.cursor(cursor_factory=RealDictCursor)
     
     def fetch_all(self, query: str, params: dict = None) -> list[dict]|errors.UniqueViolation|None:
