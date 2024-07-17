@@ -5,7 +5,7 @@ import uvicorn
 
 from src.config import PORT
 from src.logic.auth import update_token
-from src.middleware.token import fetch_token
+from src.middleware.token import fetch_token, fetch_refresh_token
 from src.routes.users import user_router
 
 BASE_PATH = '/api'
@@ -25,24 +25,20 @@ async def token_middleware(request: Request, call_next):
 
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
-
+    token_errors = ('Invalid token', 'Token expired')
     token = request.cookies.get("access-token")
     refresh_token = request.cookies.get('refresh-token')
 
-    token_data = await fetch_token(token)
-    if token_data == 'Token expired':
-        response = Response()
-        new_token = update_token(refresh_token, response)
-        if new_token:
-            response = await call_next(request)
-        else:
-            return JSONResponse(status_code=401, content={'detail': 'Token expired'})
-    elif not token_data or token_data == 'Invalid token':
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
-    
-    print('middleware success')
-    response = await call_next(request)
-    return response
+    token_data = await fetch_token(token, refresh_token)
+    refresh_token_data = await fetch_refresh_token(refresh_token)
+    if token_data in token_errors:
+        if refresh_token_data:
+            response = call_next(request)
+            update_token(refresh_token, response)
+            return response 
+        return JSONResponse(status_code=401, content={'detail': token_data})
+
+    return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
 
