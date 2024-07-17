@@ -50,7 +50,7 @@ async def create_user(response: Response, user: UserCreate):
                 address=new_user.get('address'),)
 
 
-@user_router.post("/login", response_model=TokenData)
+@user_router.post("/login", response_model=AccessTokenData)
 async def login(response: Response, user: LoginRequest):
     db = Database()
     query = "SELECT * FROM users WHERE username = %(identifier)s OR email = %(identifier)s"
@@ -65,7 +65,7 @@ async def login(response: Response, user: LoginRequest):
     
     set_active_auth_coockie(response=response, token_data=token_data)
 
-    return token_data
+    return AccessTokenData(token=token_data.token, expires_in=token_data.expires_in)
 
 
 @user_router.post("/logout", response_model=LogoutResponse)

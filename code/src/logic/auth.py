@@ -34,16 +34,6 @@ def generate_token(user_id: str) -> TokenData:
         expires_refresh_in=int(refresh_expires_delta.total_seconds())
     )
 
-def refresh_token(refresh_token: str) -> TokenData:
-    try:
-        decoded_refresh_token = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = decoded_refresh_token["user_id"]
-    except jwt.ExpiredSignatureError:
-        raise Exception("Refresh token has expired")
-    except jwt.InvalidTokenError:
-        raise Exception("Invalid refresh token")
-
-    return generate_token(user_id)
 
 def decode_token(token: str) -> int:
     try:
@@ -57,6 +47,19 @@ def decode_token(token: str) -> int:
         return user_id
     except (jwt.InvalidTokenError, jwt.PyJWTError):
         return None
+
+
+def update_token(refresh_token, response):
+    try:
+        refresh_token: dict = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        token_data = generate_token(refresh_token.get('user_id'))
+        set_active_auth_coockie(response=response, token_data=token_data)
+    except jwt.ExpiredSignatureError:
+        print("Refresh token expired")
+        return 'Refresh token expired'
+    except jwt.InvalidTokenError:
+        print("Invalid refresh token")
+        return 'Invalid refresh token'
 
 
 def hash_pass(password: str) -> str:

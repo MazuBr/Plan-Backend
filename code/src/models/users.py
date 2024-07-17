@@ -12,6 +12,11 @@ class UserCreate(BaseModel):
     address: Optional[str] = None
 
 
+class AccessTokenData(BaseModel):
+    token: str
+    expires_in: int
+
+
 class TokenData(BaseModel):
     token: str
     refresh_token: str
