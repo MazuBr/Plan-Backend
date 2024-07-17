@@ -49,7 +49,7 @@ def decode_token(token: str) -> int:
         return None
 
 
-def update_token(refresh_token, response):
+async def update_token(refresh_token, response):
     try:
         refresh_token: dict = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         token_data = generate_token(refresh_token.get('user_id'))
