@@ -34,7 +34,7 @@ async def token_middleware(request: Request, call_next):
         if token_data in token_errors:
             return JSONResponse(status_code=401, content={'detail': token_data})
     elif not token:
-        return JSONResponse(status_code=401, content={'detail': token_data})
+        return JSONResponse(status_code=401, content={'detail': 'No token'})
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
