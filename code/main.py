@@ -36,7 +36,7 @@ async def token_middleware(response: Response, request: Request, call_next):
     if not token_data or token_data == 'Invalid token':
         return JSONResponse(status_code=401, content={"detail": "Invalid token"})
     print('middleware success')
-    return await call_next(request)
+    return await call_next(request, response)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
 
