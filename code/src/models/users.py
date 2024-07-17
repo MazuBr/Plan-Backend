@@ -2,6 +2,17 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Union
 
 
+class TokenData(BaseModel):
+    token: str
+    refresh_token: str
+    expires_in: int
+    expires_refresh_in: int
+
+
+class AccessTokenData(BaseModel):
+    token: str
+    expires_in: str
+
 class UserCreate(BaseModel):
     username: str = Field(..., max_length=50)
     email: EmailStr
@@ -11,14 +22,10 @@ class UserCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = None
 
+
 class LoginResponse(BaseModel):
     detail: str
-
-class TokenData(BaseModel):
-    token: str
-    refresh_token: str
-    expires_in: int
-    expires_refresh_in: int
+    access_token: AccessTokenData
 
 
 class UserResponse(BaseModel):
@@ -29,6 +36,7 @@ class UserResponse(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    access_token: AccessTokenData
 
 
 class LoginRequest(BaseModel):
@@ -50,3 +58,4 @@ class CheckSessionResponse(BaseModel):
 
 class RefreshTokenResponse(BaseModel):
     detail: str
+    access_token: AccessTokenData

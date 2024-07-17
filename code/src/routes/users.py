@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer
 
 from src.exceptions.users import *
 
-from src.logic.auth import decode_token, generate_token, hash_pass, verify_password,\
+from src.logic.auth import decode_token, hash_pass, verify_password,\
     set_active_auth_coockie, set_unactive_auth_coockie
 from src.logic.auto_gen_sqls import auto_gen
 from src.logic.postgres_connection import Database
@@ -38,7 +38,7 @@ async def create_user(response: Response, user: UserCreate):
     
     new_user = db_response[0]
 
-    set_active_auth_coockie(response=response, user_id=new_user.get('id'))
+    token = set_active_auth_coockie(response=response, user_id=new_user.get('id'))
     
     return UserResponse(id=new_user.get('id'),
                 username=new_user.get('username'),
@@ -46,7 +46,8 @@ async def create_user(response: Response, user: UserCreate):
                 first_name=new_user.get('first_name'),
                 last_name=new_user.get('last_name'),
                 phone=new_user.get('phone'),
-                address=new_user.get('address'),)
+                address=new_user.get('address'),
+                access_token=token)
 
 
 @user_router.post("/login", response_model=LoginResponse)
@@ -60,9 +61,9 @@ async def login(response: Response, user: LoginRequest):
     if not db_user or not verify_password(user.password, db_user.get("password")):
         raise HTTPException(status_code=400, detail="Invalid username or password")
     user_id = db_user.get("id")
-    set_active_auth_coockie(response=response, user_id=user_id)
+    token = set_active_auth_coockie(response=response, user_id=user_id)
 
-    return LoginResponse(detail='Login successful')
+    return LoginResponse(detail='Login successful', access_token=token)
 
 
 @user_router.post("/logout", response_model=LogoutResponse)
@@ -73,20 +74,16 @@ async def logout_user(response: Response):
 
 @user_router.post("/refresh-token", response_model=RefreshTokenResponse)
 async def refresh_token(request: Request, response: Response):
-    token = request.headers.get("refresh-token")
+    token = request.cookies.get("refresh-token")
     user_id = decode_token(token)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    set_active_auth_coockie(response=response, user_id=user_id)
-    return RefreshTokenResponse(detail='Successfull token refresh')
+    token = set_active_auth_coockie(response=response, user_id=user_id)
+    return RefreshTokenResponse(detail='Successfull token refresh', access_token=token)
 
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
-async def check_session(request: Request, response: Response):
-    # req_token = request.cookies.get("access-token")
-    # resp_token = response.set_cookie
-    print('request.cookies in check session:', request.cookies)
-    print('response check session: ', response.headers)
+async def check_session():
     return CheckSessionResponse(detail="Token is valid")
 
     if not req_token or not decode_token(token):
