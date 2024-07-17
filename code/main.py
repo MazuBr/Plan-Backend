@@ -38,4 +38,4 @@ app.include_router(user_router, prefix='/user', tags=['users'])
 app.openapi = lambda: custom_openapi(app)
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=PORT, ssl_keyfile=key_path, ssl_certfile=cert_path)
+    uvicorn.run(app, host='0.0.0.0', port=PORT,)
