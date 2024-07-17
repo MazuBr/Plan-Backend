@@ -1,10 +1,11 @@
 from typing import Any, Dict, List
 
 from psycopg2 import connect, DatabaseError, IntegrityError, errors
+from psycopg2 import connect, DatabaseError, IntegrityError, errors
 from psycopg2.extensions import connection as Connection, cursor as Cursor
 from psycopg2.extras import RealDictCursor
 
-from config import DB_CONF
+from src.config import DB_CONF
 
 
 class Database:

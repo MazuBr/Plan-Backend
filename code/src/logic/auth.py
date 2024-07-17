@@ -4,8 +4,8 @@ from fastapi import Response
 import bcrypt
 import jwt
 
-from models.users import TokenData
-from config import SECRET_KEY, ALGORITHM
+from src.models.users import TokenData
+from src.config import SECRET_KEY, ALGORITHM
 
 def generate_token(user_id: str) -> TokenData:
     access_expires_delta = datetime.timedelta(minutes=15)

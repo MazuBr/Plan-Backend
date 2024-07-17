@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends, Response, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Response, Request
+from fastapi.security import HTTPBearer
 
-from exceptions.users import *
+from src.exceptions.users import *
 
-from logic.auth import decode_token, generate_token, hash_pass, verify_password,\
+from src.logic.auth import decode_token, generate_token, hash_pass, verify_password,\
     set_active_auth_coockie, set_unactive_auth_coockie
-
-from logic.auto_gen_sqls import auto_gen
-from logic.postgres_connection import Database
-from models.users import *
-from logic.redis_connection import cache_user_token, remove_cache_user_token
+from src.logic.auto_gen_sqls import auto_gen
+from src.logic.postgres_connection import Database
+from src.models.users import *
+from src.logic.redis_connection import cache_user_token, remove_cache_user_token
 
 user_router = APIRouter()
 auth_scheme = HTTPBearer()

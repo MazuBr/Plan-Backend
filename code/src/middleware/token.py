@@ -1,6 +1,6 @@
 import jwt
 
-from config import SECRET_KEY, ALGORITHM
+from src.config import SECRET_KEY, ALGORITHM
 
 async def fetch_token(token: str):
     try:
