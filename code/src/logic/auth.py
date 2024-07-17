@@ -61,6 +61,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def set_active_auth_coockie(response: Response, user_id: int) -> None:
     token_data = generate_token(user_id=user_id)
     response.headers["Authorization"] = f"Bearer {token_data.token}"
+    response.set_cookie(key='access-token', value=token_data.refresh_token,
+                         secure=True, samesite='none', max_age=token_data.expires_refresh_in)
     response.set_cookie(key='refresh-token', value=token_data.refresh_token,
                          httponly=True, secure=True, samesite='none', max_age=token_data.expires_refresh_in)
     return None
