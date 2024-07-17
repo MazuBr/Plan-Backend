@@ -12,6 +12,7 @@ class TokenData(BaseModel):
 class AccessTokenData(BaseModel):
     token: str
     expires_in: int
+    
 
 class UserCreate(BaseModel):
     username: str = Field(..., max_length=50)

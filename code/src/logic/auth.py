@@ -65,5 +65,5 @@ def set_active_auth_coockie(response: Response, user_id: int) -> AccessTokenData
     return AccessTokenData(token=token_data.token, expires_in=token_data.expires_in)
 
 def set_unactive_auth_coockie(response: Response) -> None:
-    response.set_cookie(key='refresh-token')
+    response.delete_cookie(key='refresh-token')
     return None
