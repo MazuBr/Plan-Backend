@@ -83,6 +83,6 @@ async def check_session(request: Request):
     token = request.cookies.get("access-token")
     
     if not token or not decode_token(token):
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=406, detail="Invalid token")
     return CheckSessionResponse(detail="Token is valid")
 
