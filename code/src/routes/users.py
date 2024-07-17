@@ -49,7 +49,7 @@ async def create_user(response: Response, user: UserCreate):
                 address=new_user.get('address'),)
 
 
-@user_router.post("/login", response_model=LoginRespnse)
+@user_router.post("/login", response_model=LoginResponse)
 async def login(response: Response, user: LoginRequest):
     db = Database()
     query = "SELECT * FROM users WHERE username = %(identifier)s OR email = %(identifier)s"
@@ -62,7 +62,7 @@ async def login(response: Response, user: LoginRequest):
     user_id = db_user.get("id")
     set_active_auth_coockie(response=response, user_id=user_id)
 
-    return LoginRespnse(detail='Login successful')
+    return LoginResponse(detail='Login successful')
 
 
 @user_router.post("/logout", response_model=LogoutResponse)
