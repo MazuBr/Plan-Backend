@@ -8,7 +8,6 @@ from src.logic.auth import decode_token, generate_token, hash_pass, verify_passw
 from src.logic.auto_gen_sqls import auto_gen
 from src.logic.postgres_connection import Database
 from src.models.users import *
-from src.logic.redis_connection import cache_user_token, remove_cache_user_token
 
 user_router = APIRouter()
 auth_scheme = HTTPBearer()
@@ -41,8 +40,7 @@ async def create_user(response: Response, user: UserCreate):
 
     token_data = generate_token(new_user.get('id'))
     set_active_auth_coockie(response=response, token_data=token_data)
-    cache_user_token(user_id=new_user.get('id'), token_data=token_data)
-
+    
     return UserResponse(id=new_user.get('id'),
                 username=new_user.get('username'),
                 email=new_user.get('email'),
@@ -65,7 +63,6 @@ async def login(response: Response, user: LoginRequest):
 
     token_data = generate_token(db_user["id"])
     
-    cache_user_token(user_id=db_user["id"], token_data=token_data)
     set_active_auth_coockie(response=response, token_data=token_data)
 
     return token_data
@@ -78,7 +75,6 @@ async def logout_user(request: Request, response: Response):
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
     set_unactive_auth_coockie(response=response)
-    remove_cache_user_token(user_id=user_id)
     return LogoutResponse(detail="Successfully logged out")
 
 
