@@ -38,11 +38,10 @@ def generate_token(user_id: str) -> TokenData:
 def decode_token(token: str) -> int:
     try:
         payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print('payload: ', payload)
         user_id = payload.get('user_id')
         if user_id is None:
             return None
-        
-        user_id = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("user_id")
         return user_id
     except (jwt.InvalidTokenError, jwt.PyJWTError):
         return None

@@ -29,11 +29,14 @@ async def token_middleware(request: Request, call_next):
     token: str = request.headers.get("Authorization")
     token_data: str
     if token:
+        print('start token')
         _, token = token.split(' ')
         token_data = await fetch_token(token)
         if token_data in token_errors:
+            print('start token data')
             return JSONResponse(status_code=401, content={'detail': token_data})
     elif not token:
+        print('elif token')
         return JSONResponse(status_code=401, content={'detail': 'No token'})
     return await call_next(request)
 
