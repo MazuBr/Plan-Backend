@@ -26,7 +26,7 @@ async def token_middleware(request: Request, call_next):
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
     token_errors = ('Invalid token', 'Token expired')
-    
+
     token = request.cookies.get("access-token")
     refresh_token = request.cookies.get('refresh-token')
 
@@ -34,9 +34,8 @@ async def token_middleware(request: Request, call_next):
     refresh_token_data = await fetch_refresh_token(refresh_token)
     if token_data in token_errors:
         if refresh_token_data:
-            response = Response()
-            await update_token(refresh_token, response)
             response = await call_next(request)
+            await update_token(refresh_token, response)
             return response 
         return JSONResponse(status_code=401, content={'detail': token_data})
 
