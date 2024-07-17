@@ -1,6 +1,8 @@
 from os import getenv
 from dotenv import load_dotenv
 
+PORT = int(getenv("PORT", 8000))
+
 load_dotenv()
 
 DB_CONF = {
@@ -13,3 +15,4 @@ DB_CONF = {
 
 SECRET_KEY = getenv("TOKEN_SECRET_KEY")
 ALGORITHM = getenv("TOKEN_ALGORITHM")
+

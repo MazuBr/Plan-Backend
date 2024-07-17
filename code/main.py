@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
+from src.config import PORT
 from src.logic.path_generator import cert_path, key_path
 from src.middleware.token import fetch_token
 from src.openapi.custom_locations import custom_openapi
@@ -37,4 +38,4 @@ app.include_router(user_router, prefix='/user', tags=['users'])
 app.openapi = lambda: custom_openapi(app)
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000, ssl_keyfile=key_path, ssl_certfile=cert_path)
+    uvicorn.run(app, host='0.0.0.0', port=PORT, ssl_keyfile=key_path, ssl_certfile=cert_path)
