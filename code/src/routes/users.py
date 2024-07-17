@@ -70,9 +70,10 @@ async def login(response: Response, user: LoginRequest):
 
 @user_router.post("/logout", response_model=LogoutResponse)
 async def logout_user(request: Request, response: Response):
+    set_unactive_auth_coockie(response=response)
+    print('start_logout')
     token = request.cookies.get("access-token")
     user_id = decode_token(token)
-    set_unactive_auth_coockie(response=response)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
     return LogoutResponse(detail="Successfully logged out")

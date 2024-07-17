@@ -79,6 +79,6 @@ def set_active_auth_coockie(response: Response, token_data: TokenData) -> None:
     return None
 
 def set_unactive_auth_coockie(response: Response) -> None:
-    response.set_cookie(key='access-token', value='', httponly=True, max_age=0)
-    response.set_cookie(key='refresh-token', value='', httponly=True, max_age=0)
+    response.set_cookie(key='access-token', value='', httponly=True, samesite='none', secure=True, max_age=0)
+    response.set_cookie(key='refresh-token', value='', httponly=True, samesite='none', secure=True, max_age=0)
     return None
