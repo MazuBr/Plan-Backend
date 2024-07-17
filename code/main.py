@@ -19,7 +19,7 @@ app.add_middleware(CORSMiddleware,
 
 @app.middleware("http")
 async def token_middleware(request: Request, call_next):
-    paths = ["/user/create", "/user/login", '/docs', '/openapi.json', '/user/logout', '/user/refresh']
+    paths = ["/user/create", "/user/login", '/docs', '/openapi.json', '/user/logout', '/user/refresh-token']
     excluded_paths = [BASE_PATH + path for path in paths]
 
     if request.url.path in excluded_paths or request.method == "OPTIONS":
@@ -41,6 +41,7 @@ async def token_middleware(request: Request, call_next):
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=PORT,)
