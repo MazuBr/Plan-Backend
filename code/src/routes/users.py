@@ -81,8 +81,8 @@ async def refresh_token(request: Request, response: Response):
     token = set_active_auth_coockie(response=response, user_id=user_id)
     return RefreshTokenResponse(detail='Successfull token refresh', access_token=token)
 
-@user_router.post("/refresh-token")
-async def refresh_token():
+@user_router.post("/aboba")
+async def aboba():
     return {'detail': 'aboba'}
 
 @user_router.post("/check-session", response_model=CheckSessionResponse)
