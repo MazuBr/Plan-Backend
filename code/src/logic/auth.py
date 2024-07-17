@@ -49,11 +49,12 @@ def decode_token(token: str) -> int:
         return None
 
 
-async def update_token(refresh_token, response):
+async def update_token(refresh_token: str, response: Response) -> TokenData|str:
     try:
         refresh_token: dict = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         token_data = generate_token(refresh_token.get('user_id'))
         set_active_auth_coockie(response=response, token_data=token_data)
+        return token_data
     except jwt.ExpiredSignatureError:
         print("Refresh token expired")
         return 'Refresh token expired'
