@@ -4,12 +4,10 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 from src.config import PORT
-from src.logic.path_generator import cert_path, key_path
 from src.middleware.token import fetch_token
-from src.openapi.custom_locations import custom_openapi
 from src.routes.users import user_router
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 app.add_middleware(CORSMiddleware,
     allow_origins=['*'],
     allow_credentials=True,
@@ -35,7 +33,6 @@ async def token_middleware(request: Request, call_next):
     return await call_next(request)
 
 app.include_router(user_router, prefix='/user', tags=['users'])
-app.openapi = lambda: custom_openapi(app)
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=PORT,)
