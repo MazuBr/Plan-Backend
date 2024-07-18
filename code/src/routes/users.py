@@ -75,7 +75,6 @@ async def logout_user(response: Response):
 @user_router.post("/refresh-token", response_model=RefreshTokenResponse)
 async def refresh_token(request: Request, response: Response):
     token = request.cookies.get("refresh-token")
-    print(token)
     user_id = decode_token(token)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid refresh token")

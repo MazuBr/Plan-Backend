@@ -11,7 +11,6 @@ def cache_user_token(user_id: int, token_data: TokenData) -> bool:
         redis_client.set(f"token:{user_id}", token_data.model_dump_json())
         return True
     except Exception as e:
-        print(f"Error caching token for user {user_id}: {e}")
         return False
 
 def get_cached_user_token(user_id: int) -> Optional[str]:
@@ -25,6 +24,5 @@ def remove_cache_user_token(user_id: int) -> bool:
         redis_client.delete(f"token:{user_id}")
         return True
     except Exception as e:
-        print(f"Error removing token for user {user_id}: {e}")
         return False
     
