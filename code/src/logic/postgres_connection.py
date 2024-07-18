@@ -25,11 +25,11 @@ class Database:
             self.commit()
 
             return results
-        
+
         except errors.UniqueViolation as unique_error:
             self.connection.rollback()
             return unique_error
-        
+
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
             return 'Server error'

@@ -14,6 +14,9 @@ DB_CONF = {
     'port': getenv('PSQL_PORT'),
 }
 
+DATABASE_URL_TEST = f"postgresql://{DB_CONF['user']}:{DB_CONF['password']}@{DB_CONF['host']}:{DB_CONF['port']}/{DB_CONF['dbname']}"
+
+
 SECRET_KEY = getenv("TOKEN_SECRET_KEY")
 ALGORITHM = getenv("TOKEN_ALGORITHM")
 

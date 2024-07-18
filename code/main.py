@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from strawberry.fastapi import GraphQLRouter
 import uvicorn
+
 
 from src.config import PORT
 from src.middleware.token import fetch_token
 from src.routes.users import user_router
+from src.graphql.scheme import schema
 
 BASE_PATH = '/api'
 
@@ -19,7 +22,7 @@ app.add_middleware(CORSMiddleware,
 
 @app.middleware("http")
 async def token_middleware(request: Request, call_next):
-    paths = ["/user/create", "/user/login", '/docs', '/openapi.json', '/user/logout', '/user/refresh-token']
+    paths = ["/user/create", "/user/login", '/docs', '/openapi.json', '/user/logout', '/user/refresh-token', '/graphql']
     excluded_paths = [BASE_PATH + path for path in paths]
 
     if request.url.path in excluded_paths or request.method == "OPTIONS":
@@ -40,6 +43,9 @@ async def token_middleware(request: Request, call_next):
         return JSONResponse(status_code=401, content={'detail': 'No token'})
     return await call_next(request)
 
+
+graphql_app = GraphQLRouter(schema)
+app.include_router(graphql_app, prefix="/graphql")
 app.include_router(user_router, prefix='/user', tags=['users'])
 
 
