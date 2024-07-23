@@ -12,6 +12,6 @@ calendar = Table('calendar', meta,
                     Column('repeat_until', BigInteger),
                     )
 
-event_user_association = Table('event_user_association', meta,
+calendar_user_association = Table('calendar_user_association', meta,
                     Column('calendar_id', BigInteger, ForeignKey('calendar.id')),
                     Column('user_id', BigInteger, ForeignKey('users.id')))
