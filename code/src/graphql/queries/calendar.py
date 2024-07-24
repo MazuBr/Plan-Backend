@@ -1,11 +1,13 @@
 import strawberry
 
 from src.database.postgres_connection import Database
-from src.graphql.types.calendar import CalendarGetEvents, CalendarHumanReadable, Repeat, CalendarEventsByDay
+from src.graphql.types.calendar import CalendarGetEvents,\
+      CalendarHumanReadable, Repeat, CalendarEventsByDay, Calendar
+
 @strawberry.type
-class EventQuery:
+class CalendarQuery:
     @strawberry.field
-    def events(self, input: CalendarGetEvents) -> list[CalendarEventsByDay]:
+    def calendar(self, input: CalendarGetEvents) -> list[CalendarEventsByDay]:
         query = """
         SELECT
             id,
@@ -20,6 +22,7 @@ class EventQuery:
             calendar
         WHERE
             start_time BETWEEN %(start_time)s AND %(end_time)s
+            and is_delete = false
         ORDER BY
             start_time ASC;
         """
@@ -44,4 +47,38 @@ class EventQuery:
         return [
             CalendarEventsByDay(day=day, events=events) for day, events in events_by_day.items()
         ]
+    
+
+    @strawberry.field
+    def calendar_epoch(self, input: CalendarGetEvents) -> list[Calendar]:
+        print('input1: ', input)
+        query = """
+        SELECT
+            id,
+            title,
+            comment,
+            start_time,
+            end_time,
+            is_repeat,
+            repeat_until
+        FROM
+            calendar
+        WHERE
+            start_time BETWEEN %(start_time)s AND %(end_time)s
+            and is_delete = false
+        ORDER BY
+            start_time ASC;
+        """
+        db = Database()
+
+        db_response: list[dict] = db.fetch_all(query=query, params={'start_time': input.start_time, 'end_time': input.end_time})
+            
+        return [Calendar(
+                id=row.get('id'),
+                title=row.get('title'),
+                comment=row.get('comment'),
+                start_time=row.get('start_time'),
+                end_time=row.get('end_time'),
+                repeat=Repeat(is_repeat=row.get('is_repeat'), repeat_until=row.get('repeat_until'))
+            ) for row in db_response]
     
