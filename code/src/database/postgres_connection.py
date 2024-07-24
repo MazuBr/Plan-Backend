@@ -4,14 +4,11 @@ from psycopg2 import connect, DatabaseError, IntegrityError, errors
 from psycopg2.extensions import connection as Connection, cursor as Cursor
 from psycopg2.extras import RealDictCursor
 
-from src.config import DB_CONF, DATABASE_URL, DATABASE_URL_TEST
-
+from src.config import DB_CONF, DATABASE_URL
 
 class Database:
     def __init__(self):
-        if DATABASE_URL_TEST:
-            self.connection: Connection = connect(DATABASE_URL_TEST)
-        elif DATABASE_URL:
+        if DATABASE_URL:
             self.connection: Connection = connect(DATABASE_URL)
         else:
             self.connection: Connection = connect(**DB_CONF)
