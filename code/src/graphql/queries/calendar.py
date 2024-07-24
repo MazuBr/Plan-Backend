@@ -3,10 +3,9 @@ import strawberry
 from src.database.postgres_connection import Database
 from src.graphql.types.calendar import CalendarGetEvents, CalendarHumanReadable, Repeat, CalendarEventsByDay
 @strawberry.type
-class CalendarQuery:
+class EventQuery:
     @strawberry.field
-    def calendar(self, input: CalendarGetEvents) -> list[CalendarEventsByDay]:
-        print('input1: ', input)
+    def events(self, input: CalendarGetEvents) -> list[CalendarEventsByDay]:
         query = """
         SELECT
             id,
@@ -45,3 +44,4 @@ class CalendarQuery:
         return [
             CalendarEventsByDay(day=day, events=events) for day, events in events_by_day.items()
         ]
+    
