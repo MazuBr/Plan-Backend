@@ -2,10 +2,12 @@ from typing import Optional
 
 import strawberry
 from datetime import datetime, date
+
+
 @strawberry.type
 class Repeat:
-    is_repeat: bool
-    repeat_until: str
+    is_repeat: Optional[bool] = None
+    repeat_until: Optional[str] = None
 
 
 @strawberry.type
@@ -22,14 +24,14 @@ class Calendar:
 class CalendarHumanReadble:
     id: int
     title: str
-    comment: str
+    comment: Optional[str] = None
     day_event_start: datetime
-    end_time: datetime
+    end_time: Optional[datetime] = None
     repeat: Repeat
 
 @strawberry.type
 class CalendarEventsByDay:
-    day = date
+    day: date
     events: list[CalendarHumanReadble]
 
 @strawberry.input

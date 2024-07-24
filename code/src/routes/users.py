@@ -6,7 +6,7 @@ from src.exceptions.users import *
 from src.logic.auth import decode_token, hash_pass, verify_password,\
     set_active_auth_coockie, set_unactive_auth_coockie
 from src.logic.auto_gen_sqls import auto_gen
-from src.logic.postgres_connection import Database
+from src.database.postgres_connection import Database
 from src.models.users import *
 
 user_router = APIRouter()
