@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 from psycopg2 import connect, DatabaseError, IntegrityError, errors
 from psycopg2.extensions import connection as Connection, cursor as Cursor
@@ -17,7 +17,7 @@ class Database:
             self.connection: Connection = connect(**DB_CONF)
         self.cursor: Cursor = self.connection.cursor(cursor_factory=RealDictCursor)
     
-    def fetch_all(self, query: str, params: dict = None) -> list[dict]|errors.UniqueViolation|None:
+    def fetch_all(self, query: str, params: dict[str, Any] = None) -> list[dict]|errors.UniqueViolation|None:
         try:
             if params:
                 self.cursor.execute(query=query, vars=params)
@@ -28,6 +28,28 @@ class Database:
             self.commit()
 
             return results
+
+        except errors.UniqueViolation as unique_error:
+            self.connection.rollback()
+            return unique_error
+
+        except (Exception, DatabaseError, IntegrityError) as error:
+            self.connection.rollback()
+            return 'Server error'
+        
+        finally:
+            self.close()
+
+    def fetch_one(self, query: str, params: dict[str, Any] = None) -> Union[Dict[str, Any], errors.UniqueViolation, None]:
+        try:
+            if params:
+                print(query, params)
+                self.cursor.execute(query=query, vars=params)
+            else:
+                self.cursor.execute(query=query)
+            result: Optional[Dict[str, Any]] = self.cursor.fetchone()
+            self.commit()
+            return result
 
         except errors.UniqueViolation as unique_error:
             self.connection.rollback()
