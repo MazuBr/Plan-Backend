@@ -1,7 +1,7 @@
 import strawberry
 
 from src.database.postgres_connection import Database
-from src.graphql.types.calendar import CalendarGetEvents, CalendarHumanReadble, Repeat, CalendarEventsByDay
+from src.graphql.types.calendar import CalendarGetEvents, CalendarHumanReadable, Repeat, CalendarEventsByDay
 @strawberry.type
 class CalendarQuery:
     @strawberry.field
@@ -29,7 +29,7 @@ class CalendarQuery:
         db_response: list[dict] = db.fetch_all(query=query, params={'start_time': input.start_time, 'end_time': input.end_time})
         events_by_day = {}
         for row in db_response:
-            event = CalendarHumanReadble(
+            event = CalendarHumanReadable(
                     id=row.get('id'),
                     title=row.get('title'),
                     comment=row.get('comment'),

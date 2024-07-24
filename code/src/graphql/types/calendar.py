@@ -14,14 +14,14 @@ class Repeat:
 class Calendar:
     id: int
     title: str
-    comment: str
+    comment: Optional[str] = None
     start_time: int
-    end_time: int
+    end_time: Optional[int] = None
     repeat: Repeat
 
 
 @strawberry.type
-class CalendarHumanReadble:
+class CalendarHumanReadable:
     id: int
     title: str
     comment: Optional[str] = None
@@ -32,7 +32,7 @@ class CalendarHumanReadble:
 @strawberry.type
 class CalendarEventsByDay:
     day: date
-    events: list[CalendarHumanReadble]
+    events: list[CalendarHumanReadable]
 
 @strawberry.input
 class CalendarCreateEvent:
