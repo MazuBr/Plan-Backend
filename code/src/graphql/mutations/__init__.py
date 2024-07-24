@@ -1,6 +1,7 @@
-# Create dynamic mutations classes
 import os
 import importlib
+
+import strawberry
 
 mutation_modules = []
 for file in os.listdir(os.path.dirname(__file__)):
@@ -11,4 +12,7 @@ for file in os.listdir(os.path.dirname(__file__)):
 
 mutation_classes = [getattr(module, cls) for module in mutation_modules for cls in dir(module) if cls.endswith("Mutation")]
 
-Mutation = type("Mutation", tuple(mutation_classes), {})
+
+@strawberry.type
+class Mutation(*mutation_classes):
+    pass
