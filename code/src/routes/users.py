@@ -80,16 +80,3 @@ async def refresh_token(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     token = set_active_auth_coockie(response=response, user_id=user_id)
     return RefreshTokenResponse(detail='Successfull token refresh', access_token=token)
-
-@user_router.post("/aboba")
-async def aboba():
-    return {'detail': 'aboba'}
-
-@user_router.post("/check-session", response_model=CheckSessionResponse)
-async def check_session():
-    return CheckSessionResponse(detail="Token is valid")
-
-    if not req_token or not decode_token(token):
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return CheckSessionResponse(detail="Token is valid")
-

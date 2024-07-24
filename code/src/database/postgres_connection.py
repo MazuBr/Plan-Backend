@@ -32,7 +32,7 @@ class Database:
 
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
-            return 'Server error'
+            return 'Server error', error
         
         finally:
             self.close()
@@ -40,7 +40,6 @@ class Database:
     def fetch_one(self, query: str, params: dict[str, Any] = None) -> Union[Dict[str, Any], errors.UniqueViolation, None]:
         try:
             if params:
-                print(query, params)
                 self.cursor.execute(query=query, vars=params)
             else:
                 self.cursor.execute(query=query)
