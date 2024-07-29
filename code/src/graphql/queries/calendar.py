@@ -21,7 +21,7 @@ class CalendarQuery:
         user_id: int = info.context.get("request").state.user_id
         query = """
         SELECT
-            id,
+            c.id,
             title,
             comment,
             to_timestamp(start_time)::date AS event_date,
@@ -30,8 +30,8 @@ class CalendarQuery:
             is_repeat,
             repeat_until
         FROM
-            calendar
-        LEFT JOIN calendar_user_association on calendar_id = id
+            calendar c
+        LEFT JOIN calendar_user_association on calendar_id = c.id
         WHERE
             start_time BETWEEN %(start_time)s AND %(end_time)s
             and user_id = %(user_id)s
