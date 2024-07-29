@@ -15,7 +15,7 @@ BASE_PATH = "/api"
 app = FastAPI(root_path=BASE_PATH)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://plan-frontend.onrender.com/", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
