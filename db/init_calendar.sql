@@ -15,11 +15,14 @@ CREATE TABLE IF NOT EXISTS public.calendar
         ON DELETE NO ACTION
 );
 
+CREATE TYPE user_association_role as ENUM ('creator', 'editor', 'participant');
+
 CREATE TABLE IF NOT EXISTS public.calendar_user_association
 (
     id BIGSERIAL PRIMARY KEY,
     calendar_id bigint,
     user_id bigint,
+    role user_association_role NOT NULL,
     CONSTRAINT calendar_user_association_calendar_id_fkey FOREIGN KEY (calendar_id)
         REFERENCES public.calendar (id) MATCH SIMPLE
         ON UPDATE NO ACTION
