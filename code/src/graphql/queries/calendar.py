@@ -1,4 +1,3 @@
-from fastapi import Request
 import strawberry
 from strawberry.types import info
 
@@ -24,7 +23,7 @@ class CalendarQuery:
             c.id,
             title,
             comment,
-            (to_timestamp(start_time) AT TIME ZONE 'Europe/Moscow')::date AS event_date,
+            (to_timestamp(start_time) AT TIME ZONE '%(time_zone)s')::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
             is_repeat,
@@ -47,6 +46,7 @@ class CalendarQuery:
                 "start_time": input.start_time,
                 "end_time": input.end_time,
                 "user_id": user_id,
+                "time_zone": input.time_zone,
             },
         )
 
