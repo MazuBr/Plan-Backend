@@ -23,7 +23,7 @@ class CalendarQuery:
             c.id,
             title,
             comment,
-            (to_timestamp(start_time) AT TIME ZONE '%(time_zone)s')::date AS event_date,
+            (to_timestamp(start_time) AT TIME ZONE %(time_zone)s)::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
             is_repeat,
@@ -49,7 +49,6 @@ class CalendarQuery:
                 "time_zone": input.time_zone,
             },
         )
-
         events_by_day = {}
         for row in db_response:
             event = CalendarHumanReadable(
