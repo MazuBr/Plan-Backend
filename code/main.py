@@ -10,41 +10,57 @@ from src.middleware.token import fetch_token
 from src.routes.users import user_router
 from src.graphql.scheme import schema
 
-BASE_PATH = '/api'
+BASE_PATH = "/api"
 
 app = FastAPI(root_path=BASE_PATH)
-app.add_middleware(CORSMiddleware,
-    allow_origins=['*'],
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://plan-frontend.onrender.com/", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.middleware("http")
 async def token_middleware(request: Request, call_next):
-    paths = ["/user/create", "/user/login", '/docs', '/openapi.json', '/user/logout', '/user/refresh-token', '/graphql']
+    paths = [
+        "/user/create",
+        "/user/login",
+        "/docs",
+        "/openapi.json",
+        "/user/logout",
+        "/user/refresh-token",
+    ]
     excluded_paths = [BASE_PATH + path for path in paths]
 
     if request.url.path in excluded_paths or request.method == "OPTIONS":
         return await call_next(request)
 
-    token_errors = ('Invalid token', 'Token expired')
+    token_errors = ("Invalid token", "Token expired")
     token: str = request.headers.get("Authorization")
     token_data: str
     if token:
-        _, token = token.split(' ')
+        _, token = token.split(" ")
         token_data = await fetch_token(token)
+        request.state.user_id = token_data.get("user_id")
         if token_data in token_errors:
-            return JSONResponse(status_code=401, content={'detail': token_data})
+            request.state.user_id = None
+            return JSONResponse(status_code=401, content={"detail": token_data})
     elif not token:
-        return JSONResponse(status_code=401, content={'detail': 'No token'})
+        request.state.user_id = None
+        return JSONResponse(status_code=401, content={"detail": "No token"})
     return await call_next(request)
 
 
 graphql_app = GraphQLRouter(schema)
-app.include_router(graphql_app, prefix="/graphql")
-app.include_router(user_router, prefix='/user', tags=['users'])
+app.include_router(graphql_app, prefix="/graphql", tags=["graphql"])
+app.include_router(user_router, prefix="/user", tags=["users"])
 
 
-if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=PORT,)
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=PORT,
+    )
