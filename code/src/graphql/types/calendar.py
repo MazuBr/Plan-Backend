@@ -15,6 +15,10 @@ class Repeat:
     is_repeat: Optional[bool] = None
     repeat_until: Optional[str] = None
 
+@strawberry.type
+class EventUserRole:
+    user_id: int
+    user_role: str
 
 @strawberry.type
 class Calendar:
@@ -24,7 +28,8 @@ class Calendar:
     start_time: int
     end_time: Optional[int] = None
     repeat: Repeat
-
+    user_data: EventUserRole
+    
 
 @strawberry.type
 class CalendarHumanReadable:
