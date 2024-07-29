@@ -24,7 +24,7 @@ class CalendarQuery:
             c.id,
             title,
             comment,
-            to_timestamp(start_time)::date AS event_date,
+            (to_timestamp(start_time) AT TIME ZONE 'Europe/Moscow')::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
             is_repeat,
