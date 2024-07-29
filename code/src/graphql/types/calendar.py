@@ -8,6 +8,7 @@ from datetime import datetime, date
 class CalendarGetEvents:
     start_time: int
     end_time: int
+    time_zone: str
 
 
 @strawberry.type
