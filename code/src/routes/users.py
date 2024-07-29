@@ -62,7 +62,6 @@ async def login(response: Response, user: LoginRequest):
         raise HTTPException(status_code=400, detail="Invalid username or password")
     user_id = db_user.get("id")
     token = set_active_auth_coockie(response=response, user_id=user_id)
-
     return LoginResponse(detail='Login successful', access_token=token)
 
 
