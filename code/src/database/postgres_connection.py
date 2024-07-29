@@ -53,7 +53,7 @@ class Database:
 
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
-            return 'Server error'
+            return 'Server error', error
         
         finally:
             self.close()
