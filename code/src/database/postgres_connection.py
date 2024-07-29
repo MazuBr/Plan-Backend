@@ -17,8 +17,9 @@ class Database:
     def fetch_all(self, query: str, params: dict[str, Any] = None) -> list[dict]|errors.UniqueViolation|None:
         try:
             if params:
+                query_to_execute = self.cursor.mogrify(query, params)
+                print(query_to_execute.decode('utf-8'))  
                 self.cursor.execute(query=query, vars=params)
-                
             else:
                 self.cursor.execute(query=query)
             results: List[Dict[str, Any]] = self.cursor.fetchall()

@@ -31,7 +31,6 @@ async def token_middleware(request: Request, call_next):
         "/openapi.json",
         "/user/logout",
         "/user/refresh-token",
-        "/graphql"
     ]
     excluded_paths = [BASE_PATH + path for path in paths]
 
@@ -56,6 +55,10 @@ async def token_middleware(request: Request, call_next):
 
 graphql_app = GraphQLRouter(schema)
 app.include_router(graphql_app, prefix="/graphql", tags=["graphql"])
+
+
+
+
 app.include_router(user_router, prefix="/user", tags=["users"])
 
 
