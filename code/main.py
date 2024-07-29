@@ -31,6 +31,7 @@ async def token_middleware(request: Request, call_next):
         "/openapi.json",
         "/user/logout",
         "/user/refresh-token",
+        "/graphql"
     ]
     excluded_paths = [BASE_PATH + path for path in paths]
 
