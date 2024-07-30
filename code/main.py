@@ -8,6 +8,7 @@ import uvicorn
 from src.config import PORT
 from src.middleware.token import fetch_token
 from src.routes.users import user_router
+from src.routes.graphql import graphql_router
 from src.graphql.scheme import schema
 
 BASE_PATH = "/api"
@@ -31,6 +32,7 @@ async def token_middleware(request: Request, call_next):
         "/openapi.json",
         "/user/logout",
         "/user/refresh-token",
+        "/graphiql",
     ]
     excluded_paths = [BASE_PATH + path for path in paths]
 
@@ -55,10 +57,7 @@ async def token_middleware(request: Request, call_next):
 
 graphql_app = GraphQLRouter(schema)
 app.include_router(graphql_app, prefix="/graphql", tags=["graphql"])
-
-
-
-
+app.include_router(graphql_router, tags=["graphql"])
 app.include_router(user_router, prefix="/user", tags=["users"])
 
 
