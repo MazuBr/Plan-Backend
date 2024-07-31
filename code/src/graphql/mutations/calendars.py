@@ -110,14 +110,15 @@ class EventMutation:
     def update_event(self, input: CalendaUpdateEvents, info: info) -> UpdatedEvent:
         db = Database()
 
+        user_id: int = info.context.get("request").state.user_id
         query = """
             UPDATE calendar
             SET 
                 title = COALESCE(%(title)s, title),
                 comment = COALESCE(%(comment)s, comment),
                 start_time = COALESCE(%(start_time)s, start_time),
-                end_time = COALESCE(%(end_time)s, end_time)
-                event_status = COALESCE(%(event_status)s, end_time)
+                end_time = COALESCE(%(end_time)s, end_time),
+                event_status = COALESCE(%(event_status)s, event_status)
             WHERE id = %(event_id)s
             AND EXISTS (
                 SELECT 1
@@ -135,11 +136,12 @@ class EventMutation:
             "comment": input.comment,
             "start_time": input.start_time,
             "end_time": input.end_time,
-            "event_status": input.event_status,
+            "event_status": input.event_status.value,
+            "user_id": user_id
         }
-
         try:
             updated_event = db.fetch_one(query=query, params=params)
+            print(updated_event)
             if not updated_event:
                 return DatabaseError(error="Event not found or no changes made")
 
@@ -153,4 +155,5 @@ class EventMutation:
             )
 
         except Exception as e:
+            print(e)
             return DatabaseError(error=str(e))
