@@ -81,8 +81,8 @@ class CalendaDeleteEventsResponse:
 @strawberry.input
 class CalendaUpdateEvents:
     event_id: int
-    title: Optional[str]
-    comment: Optional[str]
+    title: Optional[str] = None
+    comment: Optional[str] = None
     start_time: Optional[int] = None
     end_time: Optional[int] = None
     event_status: Optional[EventStatus] = None

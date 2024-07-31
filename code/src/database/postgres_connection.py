@@ -6,6 +6,7 @@ from psycopg2.extras import RealDictCursor
 
 from src.config import DB_CONF, DATABASE_URL
 
+
 class Database:
     def __init__(self):
         if DATABASE_URL:
@@ -13,8 +14,10 @@ class Database:
         else:
             self.connection: Connection = connect(**DB_CONF)
         self.cursor: Cursor = self.connection.cursor(cursor_factory=RealDictCursor)
-    
-    def fetch_all(self, query: str, params: dict[str, Any] = None) -> list[dict]|errors.UniqueViolation|None:
+
+    def fetch_all(
+        self, query: str, params: dict[str, Any] = None
+    ) -> list[dict] | errors.UniqueViolation | None:
         try:
             if params:
                 query_to_execute = self.cursor.mogrify(query, params)
@@ -34,14 +37,18 @@ class Database:
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
             print(error)
-            return 'Server error', error
-        
+            return "Server error", error
+
         finally:
             self.close()
 
-    def fetch_one(self, query: str, params: dict[str, Any] = None) -> Union[Dict[str, Any], errors.UniqueViolation, None]:
+    def fetch_one(
+        self, query: str, params: dict[str, Any] = None
+    ) -> Union[Dict[str, Any], errors.UniqueViolation, None]:
         try:
             if params:
+                query_to_execute = self.cursor.mogrify(query, params)
+                # print(query_to_execute.decode('utf-8'))
                 self.cursor.execute(query=query, vars=params)
             else:
                 self.cursor.execute(query=query)
@@ -55,8 +62,8 @@ class Database:
 
         except (Exception, DatabaseError, IntegrityError) as error:
             self.connection.rollback()
-            return 'Server error', error
-        
+            return "Server error", error
+
         finally:
             self.close()
 
