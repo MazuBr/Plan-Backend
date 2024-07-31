@@ -26,6 +26,7 @@ class CalendarQuery:
             (to_timestamp(start_time) AT TIME ZONE %(time_zone)s)::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
+            event_status,
             is_repeat,
             repeat_until
         FROM
@@ -57,6 +58,7 @@ class CalendarQuery:
                 comment=row.get("comment"),
                 day_event_start=row.get("start_time"),
                 end_time=row.get("end_time"),
+                event_status=row.get("event_status"),
                 repeat=Repeat(
                     is_repeat=row.get("is_repeat"), repeat_until=row.get("repeat_until")
                 ),

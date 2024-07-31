@@ -1,7 +1,14 @@
-from typing import List, Optional, Union
-
+from typing import List, Optional
+from enum import Enum
 import strawberry
 from datetime import datetime, date
+
+
+@strawberry.enum
+class EventStatus(Enum):
+    ACTIVE = "active"
+    CANCEL = "cancel"
+    PENDING = "pending"
 
 
 @strawberry.input
@@ -16,10 +23,12 @@ class Repeat:
     is_repeat: Optional[bool] = None
     repeat_until: Optional[str] = None
 
+
 @strawberry.type
 class EventUserRole:
     user_id: int
     user_role: str
+
 
 @strawberry.type
 class Calendar:
@@ -28,9 +37,10 @@ class Calendar:
     comment: Optional[str] = None
     start_time: int
     end_time: Optional[int] = None
+    event_status: EventStatus
     repeat: Repeat
     user_data: EventUserRole
-    
+
 
 @strawberry.type
 class CalendarHumanReadable:
@@ -40,6 +50,7 @@ class CalendarHumanReadable:
     day_event_start: datetime
     end_time: Optional[datetime] = None
     repeat: Repeat
+    event_status: EventStatus
 
 
 @strawberry.type
@@ -54,6 +65,7 @@ class CalendarCreateEvent:
     comment: Optional[str] = None
     start_time: int
     end_time: Optional[int] = None
+    event_status: Optional[EventStatus] = None
 
 
 @strawberry.input
@@ -73,15 +85,17 @@ class CalendaUpdateEvents:
     comment: Optional[str]
     start_time: Optional[int] = None
     end_time: Optional[int] = None
+    event_status: Optional[EventStatus] = None
 
 
 @strawberry.type
 class UpdatedEvent:
     event_id: int
-    title: Optional[str]
-    comment: Optional[str]
+    title: Optional[str] = None
+    comment: Optional[str] = None
     start_time: Optional[int] = None
     end_time: Optional[int] = None
+    event_status: Optional[EventStatus] = None
 
 
 @strawberry.type
