@@ -1,3 +1,5 @@
+CREATE TYPE event_status as ENUM ('active', 'cancel', 'pending');
+
 CREATE TABLE IF NOT EXISTS public.calendar
 (
     id BIGSERIAL NOT NULL PRIMARY KEY,
@@ -7,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.calendar
     end_time bigint,
     is_repeat boolean,
     repeat_until bigint,
+    event_status event_status NOT NULL DEFAULT 'pending',
     is_delete BOOLEAN DEFAULT FALSE,
     deleted_by bigint,
     CONSTRAINT calendar_users_id_fkey FOREIGN KEY (deleted_by)
@@ -22,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.calendar_user_association
     id BIGSERIAL PRIMARY KEY,
     calendar_id bigint,
     user_id bigint,
-    role user_association_role NOT NULL,
+    role user_association_role NOT NULL DEFAULT 'participant',
     CONSTRAINT calendar_user_association_calendar_id_fkey FOREIGN KEY (calendar_id)
         REFERENCES public.calendar (id) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -31,4 +34,5 @@ CREATE TABLE IF NOT EXISTS public.calendar_user_association
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
+    CONSTRAINT unique_user_calendar UNIQUE (user_id, calendar_id)
 );

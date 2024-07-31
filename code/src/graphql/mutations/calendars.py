@@ -24,9 +24,9 @@ class EventMutation:
         db = Database()
         query = """
             WITH new_calendar AS (
-                INSERT INTO calendar (title, comment, start_time, end_time, is_repeat, repeat_until)
-                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, %(is_repeat)s, %(repeat_until)s)
-                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until
+                INSERT INTO calendar (title, comment, start_time, end_time, is_repeat, repeat_until, event_status)
+                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, %(is_repeat)s, %(repeat_until)s, %(event_status)s)
+                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until, event_status
             )
             , inserted_association AS (
                 INSERT INTO calendar_user_association (calendar_id, user_id, role)
@@ -36,7 +36,7 @@ class EventMutation:
             )
             SELECT 
                 nc.id, nc.title, nc.comment, nc.start_time, nc.end_time, nc.is_repeat, nc.repeat_until, 
-                ia.user_id, ia.role
+                ia.user_id, ia.role, event_status
             FROM 
                 new_calendar nc
             JOIN 
@@ -52,17 +52,22 @@ class EventMutation:
             "start_time": input.start_time,
             "end_time": input.end_time if input.end_time is not None else None,
             "is_repeat": False,
+            "event_status": (
+                input.event_status.value
+                if input.event_status is not None
+                else "pending"
+            ),
             "repeat_until": None,
         }
 
         new_event = db.fetch_one(query=query, params=data)
-        print("new_event: ", new_event)
         return Calendar(
             id=new_event.get("id"),
             title=new_event.get("title"),
             comment=new_event.get("comment"),
             start_time=new_event.get("start_time"),
             end_time=new_event.get("end_time"),
+            event_status=new_event.get("event_status"),
             repeat=Repeat(
                 is_repeat=new_event.get("is_repeat"),
                 repeat_until=new_event.get("repeat_until"),
@@ -73,20 +78,36 @@ class EventMutation:
         )
 
     @strawberry.mutation
-    def delete_event(self, input: CalendaDeleteEvents) -> CalendaDeleteEventsResponse:
+    def delete_event(
+        self, input: CalendaDeleteEvents, info: info
+    ) -> CalendaDeleteEventsResponse:
+        user_id: int = info.context.get("request").state.user_id
         db = Database()
         query = """
-            UPDATE calendar set is_delete = True WHERE id = ANY(%(ids)s::int[]) and is_delete = false RETURNING id;
+            UPDATE calendar
+                SET is_delete = TRUE
+                WHERE id = ANY(%(ids)s::int[])
+                AND is_delete = FALSE
+                AND EXISTS (
+                SELECT 1
+                FROM calendar_user_association
+                WHERE user_id = %(user_id)s 
+                AND calendar_user_association.calendar_id = calendar.id
+                )
+                RETURNING id;
         """
 
-        new_event = db.fetch_all(query=query, params={"ids": input.event_id})
-        if isinstance(new_event, str) and new_event.startswith("Server error"):
-            return DatabaseError("Database error")
+        new_event = db.fetch_all(
+            query=query, params={"ids": input.event_id, "user_id": user_id}
+        )
 
-        return CalendaDeleteEventsResponse(ids=[event["id"] for event in new_event])
+        if isinstance(new_event, tuple) and new_event[1] == "Server error":
+            return DatabaseError("Database error")
+        ids = [event["id"] for event in new_event]
+        return CalendaDeleteEventsResponse(ids=ids)
 
     @strawberry.mutation
-    def update_event(self, input: CalendaUpdateEvents) -> UpdatedEvent:
+    def update_event(self, input: CalendaUpdateEvents, info: info) -> UpdatedEvent:
         db = Database()
 
         query = """
@@ -96,9 +117,16 @@ class EventMutation:
                 comment = COALESCE(%(comment)s, comment),
                 start_time = COALESCE(%(start_time)s, start_time),
                 end_time = COALESCE(%(end_time)s, end_time)
+                event_status = COALESCE(%(event_status)s, end_time)
             WHERE id = %(event_id)s
+            AND EXISTS (
+                SELECT 1
+                FROM calendar_user_association
+                WHERE user_id = %(user_id)s 
+                AND calendar_user_association.calendar_id = calendar.id
+            )
             and is_delete = FALSE
-            RETURNING id, title, comment, start_time, end_time;
+            RETURNING id, title, comment, start_time, end_time, event_status;
         """
 
         params = {
@@ -107,6 +135,7 @@ class EventMutation:
             "comment": input.comment,
             "start_time": input.start_time,
             "end_time": input.end_time,
+            "event_status": input.event_status,
         }
 
         try:
@@ -120,6 +149,7 @@ class EventMutation:
                 comment=updated_event["comment"],
                 start_time=updated_event["start_time"],
                 end_time=updated_event["end_time"],
+                event_status=updated_event["event_status"],
             )
 
         except Exception as e:
