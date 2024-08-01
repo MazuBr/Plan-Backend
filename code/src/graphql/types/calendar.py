@@ -72,6 +72,11 @@ class CalendaDeleteEvents:
     event_id: List[int]
 
 
+@strawberry.input
+class CalendaRestoreEvents:
+    event_id: List[int]
+
+
 @strawberry.type
 class CalendaDeleteEventsResponse:
     ids: List[int]
@@ -100,3 +105,12 @@ class UpdatedEvent:
 @strawberry.type
 class DatabaseError:
     error: str
+
+
+class EventNotFoundError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        self.status_code = 204
+
+    def __str__(self):
+        return self.message
