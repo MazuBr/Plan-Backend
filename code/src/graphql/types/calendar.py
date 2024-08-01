@@ -65,7 +65,6 @@ class CalendarCreateEvent:
     comment: Optional[str] = None
     start_time: int
     end_time: Optional[int] = None
-    event_status: Optional[EventStatus] = None
 
 
 @strawberry.input

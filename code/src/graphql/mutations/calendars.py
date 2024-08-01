@@ -24,19 +24,19 @@ class EventMutation:
         db = Database()
         query = """
             WITH new_calendar AS (
-                INSERT INTO calendar (title, comment, start_time, end_time, is_repeat, repeat_until, event_status)
-                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, %(is_repeat)s, %(repeat_until)s, %(event_status)s)
-                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until, event_status
+                INSERT INTO calendar (title, comment, start_time, end_time, is_repeat, repeat_until)
+                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, %(is_repeat)s, %(repeat_until)s)
+                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until
             )
             , inserted_association AS (
-                INSERT INTO calendar_user_association (calendar_id, user_id, role)
-                SELECT id, %(user_id)s, 'creator' 
+                INSERT INTO calendar_user_association (calendar_id, user_id, role, status)
+                SELECT id, %(user_id)s, 'creator', 'active'
                 FROM new_calendar
-                RETURNING calendar_id, user_id, role
+                RETURNING calendar_id, user_id, role, status
             )
             SELECT 
                 nc.id, nc.title, nc.comment, nc.start_time, nc.end_time, nc.is_repeat, nc.repeat_until, 
-                ia.user_id, ia.role, event_status
+                ia.user_id, ia.role, ia.status as event_status
             FROM 
                 new_calendar nc
             JOIN 
@@ -52,11 +52,6 @@ class EventMutation:
             "start_time": input.start_time,
             "end_time": input.end_time if input.end_time is not None else None,
             "is_repeat": False,
-            "event_status": (
-                input.event_status.value
-                if input.event_status is not None
-                else "pending"
-            ),
             "repeat_until": None,
         }
 
@@ -112,13 +107,13 @@ class EventMutation:
 
         user_id: int = info.context.get("request").state.user_id
         query = """
+        with update_c as (
             UPDATE calendar
             SET 
                 title = COALESCE(%(title)s, title),
                 comment = COALESCE(%(comment)s, comment),
                 start_time = COALESCE(%(start_time)s, start_time),
-                end_time = COALESCE(%(end_time)s, end_time),
-                event_status = COALESCE(%(event_status)s, event_status)
+                end_time = COALESCE(%(end_time)s, end_time)
             WHERE id = %(event_id)s
             AND EXISTS (
                 SELECT 1
@@ -127,7 +122,17 @@ class EventMutation:
                 AND calendar_user_association.calendar_id = calendar.id
             )
             and is_delete = FALSE
-            RETURNING id, title, comment, start_time, end_time, event_status;
+            RETURNING id, title, comment, start_time, end_time),
+        update_ua as (
+            update calendar_user_association SET
+            status = COALESCE(%(event_status)s, status)
+            WHERE calendar_id = %(event_id)s AND user_id = %(user_id)s
+            RETURNING status, user_id, calendar_id)
+        SELECT uc.id, uc.title, uc.comment, uc.start_time, uc.end_time, 
+            ucu.status as event_status
+        FROM 
+            update_c uc,
+            update_ua ucu;
         """
 
         params = {
@@ -136,8 +141,8 @@ class EventMutation:
             "comment": input.comment,
             "start_time": input.start_time,
             "end_time": input.end_time,
-            "event_status": input.event_status.value,
-            "user_id": user_id
+            "event_status": input.event_status.value if input.event_status else None,
+            "user_id": user_id,
         }
         try:
             updated_event = db.fetch_one(query=query, params=params)
