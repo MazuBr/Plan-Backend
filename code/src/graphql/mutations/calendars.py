@@ -12,6 +12,8 @@ from src.graphql.types.calendar import (
     CalendaUpdateEvents,
     UpdatedEvent,
     EventUserRole,
+    CalendaRestoreEvents,
+    EventNotFoundError,
 )
 from src.database.postgres_connection import Database
 
@@ -92,13 +94,13 @@ class EventMutation:
                 RETURNING id;
         """
 
-        new_event = db.fetch_all(
+        delete_event = db.fetch_all(
             query=query, params={"ids": input.event_id, "user_id": user_id}
         )
 
-        if isinstance(new_event, tuple) and new_event[1] == "Server error":
+        if isinstance(delete_event, tuple) and delete_event[1] == "Server error":
             return DatabaseError("Database error")
-        ids = [event["id"] for event in new_event]
+        ids = [event["id"] for event in delete_event]
         return CalendaDeleteEventsResponse(ids=ids)
 
     @strawberry.mutation
@@ -162,3 +164,49 @@ class EventMutation:
         except Exception as e:
             print(e)
             return DatabaseError(error=str(e))
+
+    @strawberry.mutation
+    def restore_event(
+        self, input: CalendaRestoreEvents, info: info
+    ) -> list[UpdatedEvent]:
+        user_id: int = info.context.get("request").state.user_id
+        db = Database()
+        query = """
+        with update_c as (
+            UPDATE calendar
+                SET is_delete = FALSE
+                WHERE id = ANY(%(ids)s::int[])
+                AND is_delete = TRUE
+                AND EXISTS (
+                SELECT 1
+                FROM calendar_user_association
+                WHERE user_id = %(user_id)s 
+                AND calendar_user_association.calendar_id = calendar.id
+                )
+                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until)
+        select update_c.id, title, comment, start_time, end_time, is_repeat, repeat_until, status as event_status
+        from update_c left join calendar_user_association on update_c.id = calendar_id and user_id = %(user_id)s;
+        """
+
+        restore_event = db.fetch_all(
+            query=query, params={"ids": input.event_id, "user_id": user_id}
+        )
+
+        response = []
+        
+        if isinstance(restore_event, list) and len(restore_event) > 0:
+            response = [UpdatedEvent(
+                event_id=event["id"],
+                title=event["title"],
+                comment=event["comment"],
+                start_time=event["start_time"],
+                end_time=event["end_time"],
+                event_status=event["event_status"],
+            ) for event in restore_event]
+        else:
+            raise EventNotFoundError(f'Element {input.event_id} not found')
+
+        if isinstance(restore_event, tuple) and restore_event[1] == "Server error":
+            return DatabaseError("Database error")
+
+        return response
