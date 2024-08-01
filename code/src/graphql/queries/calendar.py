@@ -26,7 +26,7 @@ class CalendarQuery:
             (to_timestamp(start_time) AT TIME ZONE %(time_zone)s)::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
-            event_status,
+            status as event_status,
             is_repeat,
             repeat_until
         FROM
