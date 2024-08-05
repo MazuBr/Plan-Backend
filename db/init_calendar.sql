@@ -7,14 +7,18 @@ CREATE TABLE IF NOT EXISTS public.calendar
     comment character varying COLLATE pg_catalog."default",
     start_time bigint,
     end_time bigint,
-    is_repeat boolean,
-    repeat_until bigint,
     is_delete BOOLEAN DEFAULT FALSE,
+    repeat_data JSONB,
     deleted_by bigint,
+    parent_id bigint,
     CONSTRAINT calendar_users_id_fkey FOREIGN KEY (deleted_by)
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE CASCADE
-        ON DELETE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT calendar_parent_id_fkey FOREIGN KEY (parent_id)
+        REFERENCES public.calendar (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TYPE user_association_role as ENUM ('creator', 'editor', 'participant');

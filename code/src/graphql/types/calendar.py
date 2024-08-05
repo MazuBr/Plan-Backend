@@ -1,7 +1,9 @@
-from typing import List, Optional
-from enum import Enum
-import strawberry
 from datetime import datetime, date
+from enum import Enum
+from typing import List, Optional
+
+import strawberry
+from strawberry.scalars import JSON
 
 
 @strawberry.enum
@@ -11,17 +13,31 @@ class EventStatus(Enum):
     PENDING = "pending"
 
 
-@strawberry.input
-class CalendarGetEvents:
-    start_time: int
-    end_time: int
-    time_zone: str
+@strawberry.enum
+class RepeatTypes(Enum):
+    DAYLY = "dayly"
+    WEEKLY = "weekly"
+    MONTHY = "monthly"
+    MONTHLY_BY_WEEK = "monthly_by_week"
+    YEARLY = "yearly"
+
+@strawberry.enum
+class DaysOfWeek(Enum):
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "Thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
 
 
 @strawberry.type
 class Repeat:
     is_repeat: Optional[bool] = None
     repeat_until: Optional[str] = None
+    delay: Optional[int] = None
+    repeate_type: Optional[RepeatTypes] = None
 
 
 @strawberry.type
@@ -59,37 +75,9 @@ class CalendarEventsByDay:
     events: list[CalendarHumanReadable]
 
 
-@strawberry.input
-class CalendarCreateEvent:
-    title: str
-    comment: Optional[str] = None
-    start_time: int
-    end_time: Optional[int] = None
-
-
-@strawberry.input
-class CalendaDeleteEvents:
-    event_id: List[int]
-
-
-@strawberry.input
-class CalendaRestoreEvents:
-    event_id: List[int]
-
-
 @strawberry.type
 class CalendaDeleteEventsResponse:
     ids: List[int]
-
-
-@strawberry.input
-class CalendaUpdateEvents:
-    event_id: int
-    title: Optional[str] = None
-    comment: Optional[str] = None
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
-    event_status: Optional[EventStatus] = None
 
 
 @strawberry.type
@@ -105,6 +93,71 @@ class UpdatedEvent:
 @strawberry.type
 class DatabaseError:
     error: str
+
+
+@strawberry.input
+class InputWeeklyRepeat:
+    days_of_week: List[DaysOfWeek]
+
+
+@strawberry.input
+class InputMonthlyByWeekRepeat:
+    days_of_week: DaysOfWeek
+    week: int
+
+
+@strawberry.input
+class RepeatData:
+    weekly: Optional[InputWeeklyRepeat] = None
+    monthly_by_week: Optional[InputMonthlyByWeekRepeat] = None
+    def __post_init__(self):
+        if (self.weekly is not None and self.monthly_by_week is not None) or (self.weekly is None and self.monthly_by_week is None):
+            raise ValueError("You must specify either 'weekly' or 'monthly_by_week', but not both.")
+
+
+@strawberry.input
+class CalendaDeleteEvents:
+    event_id: List[int]
+
+
+@strawberry.input
+class CalendaRestoreEvents:
+    event_id: List[int]
+
+
+@strawberry.input
+class CalendarGetEvents:
+    start_time: int
+    end_time: int
+    time_zone: str
+
+
+@strawberry.input
+class InputRepeat:
+    repeat_until: Optional[str] = None
+    delay: Optional[int] = None
+    repeate_type: RepeatTypes
+    repeat_data: RepeatData
+
+
+@strawberry.input
+class CalendarCreateEvent:
+    title: str
+    comment: Optional[str] = None
+    start_time: int
+    end_time: Optional[int] = None
+    repeat: Optional[InputRepeat] = None
+
+
+@strawberry.input
+class CalendaUpdateEvents:
+    event_id: int
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    start_time: Optional[int] = None
+    end_time: Optional[int] = None
+    event_status: Optional[EventStatus] = None
+    repeat: Optional[InputRepeat] = None
 
 
 class EventNotFoundError(Exception):

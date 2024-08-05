@@ -26,9 +26,8 @@ class CalendarQuery:
             (to_timestamp(start_time) AT TIME ZONE %(time_zone)s)::date AS event_date,
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
-            status as event_status,
-            is_repeat,
-            repeat_until
+            repeat_data,
+            status as event_status
         FROM
             calendar c
         LEFT JOIN calendar_user_association on calendar_id = c.id
@@ -52,6 +51,20 @@ class CalendarQuery:
         )
         events_by_day = {}
         for row in db_response:
+            repeat_data: dict = row.get("repeat_data")
+            delay = None
+            is_repeat = None
+            repeat_until = None
+            repeate_type = None
+ 
+            if repeat_data:
+                is_repeat = True
+                delay = repeat_data.get("delay")
+                repeat_until = repeat_data.get("repeat_until")
+                repeate_type = repeat_data.get("repeate_type")
+            else:
+                is_repeat = False
+
             event = CalendarHumanReadable(
                 id=row.get("id"),
                 title=row.get("title"),
@@ -60,9 +73,13 @@ class CalendarQuery:
                 end_time=row.get("end_time"),
                 event_status=row.get("event_status"),
                 repeat=Repeat(
-                    is_repeat=row.get("is_repeat"), repeat_until=row.get("repeat_until")
+                    delay=delay,
+                    repeat_until=repeat_until,
+                    repeate_type=repeate_type,
+                    is_repeat=is_repeat,
                 ),
             )
+
             event_date = row.get("event_date")
             if event_date not in events_by_day:
                 events_by_day[event_date] = []
