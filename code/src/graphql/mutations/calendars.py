@@ -1,3 +1,5 @@
+import json
+
 import strawberry
 from strawberry.types import info
 
@@ -24,11 +26,20 @@ class EventMutation:
     def create_event(self, input: CalendarCreateEvent, info: info) -> Calendar:
         user_id: int = info.context.get("request").state.user_id
         db = Database()
+        repeat_data = None
+        if input.repeat:
+            print('input.repeat: ', input.repeat)
+            repeat_data = strawberry.asdict(input.repeat)
+            repeat_data["repeate_type"] = input.repeat.repeate_type.value
+            repeat_data["repeat_data"] = strawberry.asdict(input.repeat.repeat_data)
+            repeat_data["repeat_data"]["monthly_by_week"][
+            "days_of_week"
+        ] = input.repeat.repeat_data.monthly_by_week.days_of_week.value
         query = """
             WITH new_calendar AS (
-                INSERT INTO calendar (title, comment, start_time, end_time, is_repeat, repeat_until)
-                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, %(is_repeat)s, %(repeat_until)s)
-                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until
+                INSERT INTO calendar (title, comment, start_time, end_time, is_delete, repeat_data)
+                VALUES (%(title)s, %(comment)s, %(start_time)s, %(end_time)s, False, %(repeat_data)s::jsonb)
+                RETURNING id, title, comment, start_time, end_time, is_delete, repeat_data
             )
             , inserted_association AS (
                 INSERT INTO calendar_user_association (calendar_id, user_id, role, status)
@@ -37,7 +48,7 @@ class EventMutation:
                 RETURNING calendar_id, user_id, role, status
             )
             SELECT 
-                nc.id, nc.title, nc.comment, nc.start_time, nc.end_time, nc.is_repeat, nc.repeat_until, 
+                nc.id, nc.title, nc.comment, nc.start_time, nc.end_time, nc.repeat_data, 
                 ia.user_id, ia.role, ia.status as event_status
             FROM 
                 new_calendar nc
@@ -53,8 +64,9 @@ class EventMutation:
             "comment": input.comment if input.comment is not None else "",
             "start_time": input.start_time,
             "end_time": input.end_time if input.end_time is not None else None,
-            "is_repeat": False,
-            "repeat_until": None,
+            "repeat_data": (
+                json.dumps(repeat_data) if repeat_data is not None else None
+            ),
         }
 
         new_event = db.fetch_one(query=query, params=data)
@@ -65,10 +77,7 @@ class EventMutation:
             start_time=new_event.get("start_time"),
             end_time=new_event.get("end_time"),
             event_status=new_event.get("event_status"),
-            repeat=Repeat(
-                is_repeat=new_event.get("is_repeat"),
-                repeat_until=new_event.get("repeat_until"),
-            ),
+            repeat=new_event.get("repeat_data"),
             user_data=EventUserRole(
                 user_id=new_event.get("user_id"), user_role=new_event.get("role")
             ),
@@ -193,18 +202,21 @@ class EventMutation:
         )
 
         response = []
-        
+
         if isinstance(restore_event, list) and len(restore_event) > 0:
-            response = [UpdatedEvent(
-                event_id=event["id"],
-                title=event["title"],
-                comment=event["comment"],
-                start_time=event["start_time"],
-                end_time=event["end_time"],
-                event_status=event["event_status"],
-            ) for event in restore_event]
+            response = [
+                UpdatedEvent(
+                    event_id=event["id"],
+                    title=event["title"],
+                    comment=event["comment"],
+                    start_time=event["start_time"],
+                    end_time=event["end_time"],
+                    event_status=event["event_status"],
+                )
+                for event in restore_event
+            ]
         else:
-            raise EventNotFoundError(f'Element {input.event_id} not found')
+            raise EventNotFoundError(f"Element {input.event_id} not found")
 
         if isinstance(restore_event, tuple) and restore_event[1] == "Server error":
             return DatabaseError("Database error")
