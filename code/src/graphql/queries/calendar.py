@@ -7,7 +7,7 @@ from src.graphql.types.calendar import (
     CalendarHumanReadable,
     CalendarEventsByDay,
     Calendar,
-    Repeat
+    Repeat,
 )
 
 
@@ -51,6 +51,7 @@ class CalendarQuery:
         )
         events_by_day = {}
         for row in db_response:
+            print("test:", row.get("repeat_data"))
             event = CalendarHumanReadable(
                 id=row.get("id"),
                 title=row.get("title"),
@@ -59,7 +60,11 @@ class CalendarQuery:
                 end_time=row.get("end_time"),
                 event_status=row.get("event_status"),
                 repeat=Repeat(
-                    **row.get("repeat_data", {})
+                    **(
+                        row.get("repeat_data")
+                        if row.get("repeat_data") is not None
+                        else {}
+                    )
                 ),
             )
 
@@ -98,7 +103,6 @@ class CalendarQuery:
             query=query,
             params={"start_time": input.start_time, "end_time": input.end_time},
         )
-
         return [
             Calendar(
                 id=row.get("id"),
@@ -107,7 +111,13 @@ class CalendarQuery:
                 start_time=row.get("start_time"),
                 end_time=row.get("end_time"),
                 repeat=Repeat(
-                    repeat=Repeat(**row.get("repeat_data", {})),
+                    repeat=Repeat(
+                        **(
+                            row.get("repeat_data")
+                            if row.get("repeat_data") is not None
+                            else {}
+                        )
+                    ),
                 ),
             )
             for row in db_response

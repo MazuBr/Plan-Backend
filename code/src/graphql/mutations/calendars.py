@@ -76,7 +76,11 @@ class EventMutation:
             start_time=new_event.get("start_time"),
             end_time=new_event.get("end_time"),
             event_status=new_event.get("event_status"),
-            repeat=Repeat(**new_event.get("repeat_data", {})),
+            repeat=Repeat(**(
+                            new_event.get("repeat_data")
+                            if new_event.get("repeat_data") is not None
+                            else {}
+                        )),
             user_data=EventUserRole(
                 user_id=new_event.get("user_id"), user_role=new_event.get("role")
             ),
