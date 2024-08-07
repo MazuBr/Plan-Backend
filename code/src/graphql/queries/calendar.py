@@ -5,9 +5,9 @@ from src.database.postgres_connection import Database
 from src.graphql.types.calendar import (
     CalendarGetEvents,
     CalendarHumanReadable,
-    Repeat,
     CalendarEventsByDay,
     Calendar,
+    Repeat
 )
 
 
@@ -51,20 +51,6 @@ class CalendarQuery:
         )
         events_by_day = {}
         for row in db_response:
-            repeat_data: dict = row.get("repeat_data")
-            delay = None
-            is_repeat = None
-            repeat_until = None
-            repeate_type = None
- 
-            if repeat_data:
-                is_repeat = True
-                delay = repeat_data.get("delay")
-                repeat_until = repeat_data.get("repeat_until")
-                repeate_type = repeat_data.get("repeate_type")
-            else:
-                is_repeat = False
-
             event = CalendarHumanReadable(
                 id=row.get("id"),
                 title=row.get("title"),
@@ -73,10 +59,7 @@ class CalendarQuery:
                 end_time=row.get("end_time"),
                 event_status=row.get("event_status"),
                 repeat=Repeat(
-                    delay=delay,
-                    repeat_until=repeat_until,
-                    repeate_type=repeate_type,
-                    is_repeat=is_repeat,
+                    **row.get("repeat_data", {})
                 ),
             )
 
@@ -100,8 +83,7 @@ class CalendarQuery:
             comment,
             start_time,
             end_time,
-            is_repeat,
-            repeat_until
+            repeat_data
         FROM
             calendar
         WHERE
@@ -125,7 +107,7 @@ class CalendarQuery:
                 start_time=row.get("start_time"),
                 end_time=row.get("end_time"),
                 repeat=Repeat(
-                    is_repeat=row.get("is_repeat"), repeat_until=row.get("repeat_until")
+                    repeat=Repeat(**row.get("repeat_data", {})),
                 ),
             )
             for row in db_response
