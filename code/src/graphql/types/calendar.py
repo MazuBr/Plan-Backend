@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
-from typing import List, Optional
+import json
+from typing import List, Optional, Union
 
 import strawberry
 from strawberry.scalars import JSON
@@ -15,11 +16,12 @@ class EventStatus(Enum):
 
 @strawberry.enum
 class RepeatTypes(Enum):
-    DAYLY = "dayly"
+    DAILY = "daily"
     WEEKLY = "weekly"
-    MONTHY = "monthly"
+    MONTHLY = "monthly"
     MONTHLY_BY_WEEK = "monthly_by_week"
     YEARLY = "yearly"
+
 
 @strawberry.enum
 class DaysOfWeek(Enum):
@@ -34,10 +36,10 @@ class DaysOfWeek(Enum):
 
 @strawberry.type
 class Repeat:
-    is_repeat: Optional[bool] = None
+    repeat_data: Optional[str] = None
     repeat_until: Optional[str] = None
     delay: Optional[int] = None
-    repeate_type: Optional[RepeatTypes] = None
+    repeat_type: Optional[RepeatTypes] = None
 
 
 @strawberry.type
@@ -76,7 +78,7 @@ class CalendarEventsByDay:
 
 
 @strawberry.type
-class CalendaDeleteEventsResponse:
+class CalendarDeleteEventsResponse:
     ids: List[int]
 
 
@@ -88,6 +90,7 @@ class UpdatedEvent:
     start_time: Optional[int] = None
     end_time: Optional[int] = None
     event_status: Optional[EventStatus] = None
+    repeat: Optional[Repeat] = None
 
 
 @strawberry.type
@@ -107,21 +110,12 @@ class InputMonthlyByWeekRepeat:
 
 
 @strawberry.input
-class RepeatData:
-    weekly: Optional[InputWeeklyRepeat] = None
-    monthly_by_week: Optional[InputMonthlyByWeekRepeat] = None
-    def __post_init__(self):
-        if (self.weekly is not None and self.monthly_by_week is not None) or (self.weekly is None and self.monthly_by_week is None):
-            raise ValueError("You must specify either 'weekly' or 'monthly_by_week', but not both.")
-
-
-@strawberry.input
-class CalendaDeleteEvents:
+class CalendarDeleteEvents:
     event_id: List[int]
 
 
 @strawberry.input
-class CalendaRestoreEvents:
+class CalendarRestoreEvents:
     event_id: List[int]
 
 
@@ -132,12 +126,111 @@ class CalendarGetEvents:
     time_zone: str
 
 
+class RepeatData:
+    def to_dict(self):
+        return self.__dict__
+
+    @classmethod
+    def expected_keys(cls) -> str:
+        return "Undefined"
+
+    @classmethod
+    def from_dict(cls, data: dict, type):
+        try:
+            return cls(**data)
+        except TypeError as e:
+            expected = cls.expected_keys()
+            raise ValueError(
+                f'Invalid data for {type}: {data}, Expected keys "{expected}"'
+            ) from e
+
+
+class RepeatDataDaily(RepeatData):
+    def __init__(self, daily: int):
+        self.daily = daily
+
+    @classmethod
+    def expected_keys(cls) -> str:
+        return "daily"
+
+
+class RepeatDataWeekly(RepeatData):
+    def __init__(self, days_of_week: int):
+        self.days_of_week = days_of_week
+
+    @classmethod
+    def expected_keys(cls) -> str:
+        return "days_of_week"
+
+
+class RepeatDataMonthly(RepeatData):
+    def __init__(self, day_of_month: int):
+        self.day_of_month = day_of_month
+
+    @classmethod
+    def expected_keys(cls) -> str:
+        return "day_of_month"
+
+
+class RepeatDataMonthlyByWeek(RepeatData):
+    def __init__(self, days_of_week: int, week: int):
+        self.days_of_week = days_of_week
+        self.week = week
+
+    @classmethod
+    def expected_keys(cls) -> List[str]:
+        return ["days_of_week", "week"]
+
+
+class RepeatDataYearly(RepeatData):
+    def __init__(self, day_of_year: int):
+        self.day_of_year = day_of_year
+
+    @classmethod
+    def expected_keys(cls) -> str:
+        return "day_of_year"
+
+
+RepeatDataType = Union[
+    RepeatDataDaily,
+    RepeatDataWeekly,
+    RepeatDataMonthly,
+    RepeatDataYearly,
+    RepeatDataMonthlyByWeek,
+]
+
+
 @strawberry.input
 class InputRepeat:
-    repeat_until: Optional[str] = None
+    repeat_until: Optional[int] = None
     delay: Optional[int] = None
-    repeate_type: RepeatTypes
-    repeat_data: RepeatData
+    repeat_type: RepeatTypes
+    repeat_data: Optional[str] = None
+
+    def get_repeat_data(self) -> RepeatDataType:
+        monthly_by_week_check = self.repeat_type == RepeatTypes.MONTHLY_BY_WEEK
+        if self.repeat_data is None and not monthly_by_week_check:
+            return None
+        elif self.repeat_data is None and monthly_by_week_check:
+            raise ValueError(
+                'Invalid data for RepeatTypes.MONTHLY_BY_WEEK: null, Expected keys "day_of_month"'
+            )
+        data = json.loads(self.repeat_data)
+        if self.repeat_type == RepeatTypes.DAILY:
+            return RepeatDataDaily.from_dict(data, self.repeat_type)
+        elif self.repeat_type == RepeatTypes.WEEKLY:
+            return RepeatDataWeekly.from_dict(data, self.repeat_type)
+        elif self.repeat_type == RepeatTypes.MONTHLY:
+            return RepeatDataMonthly.from_dict(data, self.repeat_type)
+        elif monthly_by_week_check:
+            return RepeatDataMonthly.from_dict(data, self.repeat_type)
+        elif self.repeat_type == RepeatTypes.YEARLY:
+            return RepeatDataMonthly.from_dict(data, self.repeat_type)
+        else:
+            raise ValueError("Unknown repeat type")
+
+    def set_repeat_data(self, data: RepeatDataType):
+        self.repeat_data = json.dumps(data.to_dict())
 
 
 @strawberry.input
@@ -150,7 +243,7 @@ class CalendarCreateEvent:
 
 
 @strawberry.input
-class CalendaUpdateEvents:
+class CalendarUpdateEvents:
     event_id: int
     title: Optional[str] = None
     comment: Optional[str] = None

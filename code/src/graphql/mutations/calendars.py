@@ -6,15 +6,15 @@ from strawberry.types import info
 from src.graphql.types.calendar import (
     CalendarCreateEvent,
     Calendar,
-    Repeat,
-    CalendaDeleteEvents,
+    CalendarUpdateEvents,
+    CalendarDeleteEvents,
+    CalendarDeleteEvents,
+    CalendarDeleteEventsResponse,
     DatabaseError,
-    CalendaDeleteEvents,
-    CalendaDeleteEventsResponse,
-    CalendaUpdateEvents,
-    UpdatedEvent,
     EventUserRole,
-    CalendaRestoreEvents,
+    Repeat,
+    UpdatedEvent,
+    CalendarRestoreEvents,
     EventNotFoundError,
 )
 from src.database.postgres_connection import Database
@@ -23,18 +23,17 @@ from src.database.postgres_connection import Database
 @strawberry.type
 class EventMutation:
     @strawberry.mutation
-    def create_event(self, input: CalendarCreateEvent, info: info) -> Calendar:
+    def create_event(self, input: CalendarCreateEvent, info: info) -> Calendar | None:
         user_id: int = info.context.get("request").state.user_id
+        print(input)
         db = Database()
         repeat_data = None
         if input.repeat:
-            print('input.repeat: ', input.repeat)
+            print("input.repeat: ", input.repeat)
             repeat_data = strawberry.asdict(input.repeat)
-            repeat_data["repeate_type"] = input.repeat.repeate_type.value
-            repeat_data["repeat_data"] = strawberry.asdict(input.repeat.repeat_data)
-            repeat_data["repeat_data"]["monthly_by_week"][
-            "days_of_week"
-        ] = input.repeat.repeat_data.monthly_by_week.days_of_week.value
+            repeat_data["repeat_type"] = input.repeat.repeat_type.value
+            repeat_data["repeat_data"] = input.repeat.repeat_data
+        print("input.repeat: ", input.repeat)
         query = """
             WITH new_calendar AS (
                 INSERT INTO calendar (title, comment, start_time, end_time, is_delete, repeat_data)
@@ -68,7 +67,7 @@ class EventMutation:
                 json.dumps(repeat_data) if repeat_data is not None else None
             ),
         }
-
+        print("new_data: ", data)
         new_event = db.fetch_one(query=query, params=data)
         return Calendar(
             id=new_event.get("id"),
@@ -77,7 +76,7 @@ class EventMutation:
             start_time=new_event.get("start_time"),
             end_time=new_event.get("end_time"),
             event_status=new_event.get("event_status"),
-            repeat=new_event.get("repeat_data"),
+            repeat=Repeat(**new_event.get("repeat_data", {})),
             user_data=EventUserRole(
                 user_id=new_event.get("user_id"), user_role=new_event.get("role")
             ),
@@ -85,13 +84,14 @@ class EventMutation:
 
     @strawberry.mutation
     def delete_event(
-        self, input: CalendaDeleteEvents, info: info
-    ) -> CalendaDeleteEventsResponse:
+        self, input: CalendarDeleteEvents, info: info
+    ) -> CalendarDeleteEventsResponse:
         user_id: int = info.context.get("request").state.user_id
         db = Database()
         query = """
             UPDATE calendar
-                SET is_delete = TRUE
+                SET is_delete = TRUE,
+                deleted_by = %(user_id)s
                 WHERE id = ANY(%(ids)s::int[])
                 AND is_delete = FALSE
                 AND EXISTS (
@@ -110,13 +110,20 @@ class EventMutation:
         if isinstance(delete_event, tuple) and delete_event[1] == "Server error":
             return DatabaseError("Database error")
         ids = [event["id"] for event in delete_event]
-        return CalendaDeleteEventsResponse(ids=ids)
+        return CalendarDeleteEventsResponse(ids=ids)
 
     @strawberry.mutation
-    def update_event(self, input: CalendaUpdateEvents, info: info) -> UpdatedEvent:
+    def update_event(self, input: CalendarUpdateEvents, info: info) -> UpdatedEvent:
         db = Database()
 
         user_id: int = info.context.get("request").state.user_id
+
+        repeat_data = None
+        if input.repeat:
+            repeat_data = strawberry.asdict(input.repeat)
+            repeat_data["repeat_type"] = input.repeat.repeat_type.value
+            repeat_data["repeat_data"] = input.repeat.repeat_data
+
         query = """
         with update_c as (
             UPDATE calendar
@@ -124,7 +131,8 @@ class EventMutation:
                 title = COALESCE(%(title)s, title),
                 comment = COALESCE(%(comment)s, comment),
                 start_time = COALESCE(%(start_time)s, start_time),
-                end_time = COALESCE(%(end_time)s, end_time)
+                end_time = COALESCE(%(end_time)s, end_time),
+                repeat_data = COALESCE(repeat_data, '{}'::jsonb) || COALESCE(%(repeat_data)s::jsonb, '{}')
             WHERE id = %(event_id)s
             AND EXISTS (
                 SELECT 1
@@ -133,15 +141,15 @@ class EventMutation:
                 AND calendar_user_association.calendar_id = calendar.id
             )
             and is_delete = FALSE
-            RETURNING id, title, comment, start_time, end_time),
+            RETURNING id, title, comment, start_time, end_time, repeat_data),
         update_ua as (
             update calendar_user_association SET
             status = COALESCE(%(event_status)s, status)
             WHERE calendar_id = %(event_id)s AND user_id = %(user_id)s
             RETURNING status, user_id, calendar_id)
-        SELECT uc.id, uc.title, uc.comment, uc.start_time, uc.end_time, 
+        SELECT uc.id, uc.title, uc.comment, uc.start_time, uc.end_time, uc.repeat_data,
             ucu.status as event_status
-        FROM 
+        FROM
             update_c uc,
             update_ua ucu;
         """
@@ -153,6 +161,9 @@ class EventMutation:
             "start_time": input.start_time,
             "end_time": input.end_time,
             "event_status": input.event_status.value if input.event_status else None,
+            "repeat_data": (
+                json.dumps(repeat_data) if repeat_data is not None else None
+            ),
             "user_id": user_id,
         }
         try:
@@ -168,6 +179,7 @@ class EventMutation:
                 start_time=updated_event["start_time"],
                 end_time=updated_event["end_time"],
                 event_status=updated_event["event_status"],
+                repeat=Repeat(**updated_event.get("repeat_data", {})),
             )
 
         except Exception as e:
@@ -176,7 +188,7 @@ class EventMutation:
 
     @strawberry.mutation
     def restore_event(
-        self, input: CalendaRestoreEvents, info: info
+        self, input: CalendarRestoreEvents, info: info
     ) -> list[UpdatedEvent]:
         user_id: int = info.context.get("request").state.user_id
         db = Database()
@@ -193,7 +205,7 @@ class EventMutation:
                 AND calendar_user_association.calendar_id = calendar.id
                 )
                 RETURNING id, title, comment, start_time, end_time, repeat_data)
-        select update_c.id, title, comment, start_time, end_time, repeat_data, status as event_status
+        select update_c.id, title, comment, start_time, end_time, repeat_data, status as event_status, repeat_data
         from update_c left join calendar_user_association on update_c.id = calendar_id and user_id = %(user_id)s;
         """
 
