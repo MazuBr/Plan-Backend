@@ -189,11 +189,11 @@ class EventMutation:
                 AND EXISTS (
                 SELECT 1
                 FROM calendar_user_association
-                WHERE user_id = %(user_id)s 
+                WHERE user_id = %(user_id)s
                 AND calendar_user_association.calendar_id = calendar.id
                 )
-                RETURNING id, title, comment, start_time, end_time, is_repeat, repeat_until)
-        select update_c.id, title, comment, start_time, end_time, is_repeat, repeat_until, status as event_status
+                RETURNING id, title, comment, start_time, end_time, repeat_data)
+        select update_c.id, title, comment, start_time, end_time, repeat_data, status as event_status
         from update_c left join calendar_user_association on update_c.id = calendar_id and user_id = %(user_id)s;
         """
 
