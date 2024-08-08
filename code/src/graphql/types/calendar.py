@@ -85,6 +85,12 @@ class CalendarDeleteEventsResponse:
 @strawberry.type
 class UpdatedEvent:
     event_id: int
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    start_time: Optional[int] = None
+    end_time: Optional[int] = None
+    event_status: Optional[EventStatus] = None
+    repeat: Optional[Repeat] = None
 
 
 @strawberry.type

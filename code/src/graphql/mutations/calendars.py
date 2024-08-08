@@ -179,6 +179,12 @@ class EventMutation:
 
             return UpdatedEvent(
                 event_id=updated_event["id"],
+                title=updated_event["title"],
+                comment=updated_event["comment"],
+                start_time=updated_event["start_time"],
+                end_time=updated_event["end_time"],
+                event_status=updated_event["event_status"],
+                repeat=Repeat(**updated_event.get("repeat_data", {})),
             )
 
         except Exception as e:
