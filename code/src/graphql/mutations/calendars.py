@@ -29,11 +29,9 @@ class EventMutation:
         db = Database()
         repeat_data = None
         if input.repeat:
-            print("input.repeat: ", input.repeat)
             repeat_data = strawberry.asdict(input.repeat)
             repeat_data["repeat_type"] = input.repeat.repeat_type.value
-            repeat_data["repeat_data"] = input.repeat.repeat_data
-        print("input.repeat: ", input.repeat)
+            repeat_data["repeat_data"] = input.repeat.get_repeat_data()
         query = """
             WITH new_calendar AS (
                 INSERT INTO calendar (title, comment, start_time, end_time, is_delete, repeat_data)
@@ -67,7 +65,6 @@ class EventMutation:
                 json.dumps(repeat_data) if repeat_data is not None else None
             ),
         }
-        print("new_data: ", data)
         new_event = db.fetch_one(query=query, params=data)
         return Calendar(
             id=new_event.get("id"),
@@ -132,11 +129,11 @@ class EventMutation:
         with update_c as (
             UPDATE calendar
             SET 
-                title = COALESCE(%(title)s, title),
-                comment = COALESCE(%(comment)s, comment),
-                start_time = COALESCE(%(start_time)s, start_time),
-                end_time = COALESCE(%(end_time)s, end_time),
-                repeat_data = COALESCE(repeat_data, '{}'::jsonb) || COALESCE(%(repeat_data)s::jsonb, '{}')
+                title = %(title)s,
+                comment = %(comment)s,
+                start_time = %(start_time)s,
+                end_time = %(end_time)s,
+                repeat_data = case when %(repeat_data)s is null then null else %(repeat_data)s::jsonb end
             WHERE id = %(event_id)s
             AND EXISTS (
                 SELECT 1
@@ -151,8 +148,13 @@ class EventMutation:
             status = COALESCE(%(event_status)s, status)
             WHERE calendar_id = %(event_id)s AND user_id = %(user_id)s
             RETURNING status, user_id, calendar_id)
-        SELECT uc.id, uc.title, uc.comment, uc.start_time, uc.end_time, uc.repeat_data,
-            ucu.status as event_status
+        SELECT uc.id, 
+        uc.title,
+        uc.comment,
+        uc.start_time,
+        uc.end_time,
+        uc.repeat_data,
+        ucu.status as event_status
         FROM
             update_c uc,
             update_ua ucu;
@@ -172,18 +174,11 @@ class EventMutation:
         }
         try:
             updated_event = db.fetch_one(query=query, params=params)
-            print(updated_event)
             if not updated_event:
                 return DatabaseError(error="Event not found or no changes made")
 
             return UpdatedEvent(
                 event_id=updated_event["id"],
-                title=updated_event["title"],
-                comment=updated_event["comment"],
-                start_time=updated_event["start_time"],
-                end_time=updated_event["end_time"],
-                event_status=updated_event["event_status"],
-                repeat=Repeat(**updated_event.get("repeat_data", {})),
             )
 
         except Exception as e:
