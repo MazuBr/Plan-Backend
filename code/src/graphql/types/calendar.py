@@ -28,7 +28,7 @@ class DaysOfWeek(Enum):
     MONDAY = "monday"
     TUESDAY = "tuesday"
     WEDNESDAY = "wednesday"
-    THURSDAY = "Thursday"
+    THURSDAY = "thursday"
     FRIDAY = "friday"
     SATURDAY = "saturday"
     SUNDAY = "sunday"
@@ -85,12 +85,6 @@ class CalendarDeleteEventsResponse:
 @strawberry.type
 class UpdatedEvent:
     event_id: int
-    title: Optional[str] = None
-    comment: Optional[str] = None
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
-    event_status: Optional[EventStatus] = None
-    repeat: Optional[Repeat] = None
 
 
 @strawberry.type
@@ -209,6 +203,7 @@ class InputRepeat:
 
     def get_repeat_data(self) -> RepeatDataType:
         monthly_by_week_check = self.repeat_type == RepeatTypes.MONTHLY_BY_WEEK
+        print('monthly_by_week_check: ', monthly_by_week_check)
         if self.repeat_data is None and not monthly_by_week_check:
             return None
         elif self.repeat_data is None and monthly_by_week_check:
@@ -245,12 +240,13 @@ class CalendarCreateEvent:
 @strawberry.input
 class CalendarUpdateEvents:
     event_id: int
-    title: Optional[str] = None
-    comment: Optional[str] = None
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
-    event_status: Optional[EventStatus] = None
-    repeat: Optional[InputRepeat] = None
+    title: Optional[str]
+    comment: Optional[str]
+    start_time: Optional[int]
+    end_time: Optional[int]
+    event_status: Optional[EventStatus]
+    repeat: Optional[InputRepeat]
+    
 
 
 class EventNotFoundError(Exception):

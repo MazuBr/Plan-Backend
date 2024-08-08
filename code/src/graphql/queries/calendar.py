@@ -51,7 +51,6 @@ class CalendarQuery:
         )
         events_by_day = {}
         for row in db_response:
-            print("test:", row.get("repeat_data"))
             event = CalendarHumanReadable(
                 id=row.get("id"),
                 title=row.get("title"),

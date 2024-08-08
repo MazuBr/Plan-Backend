@@ -21,7 +21,7 @@ class Database:
         try:
             if params:
                 query_to_execute = self.cursor.mogrify(query, params)
-                print(query_to_execute.decode('utf-8'))
+                # print(query_to_execute.decode('utf-8'))
                 self.cursor.execute(query=query, vars=params)
             else:
                 self.cursor.execute(query=query)
