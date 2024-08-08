@@ -67,7 +67,7 @@ class CalendarHumanReadable:
     comment: Optional[str] = None
     day_event_start: datetime
     end_time: Optional[datetime] = None
-    repeat: Repeat
+    repeat: Optional[Repeat] = None
     event_status: EventStatus
 
 
