@@ -51,6 +51,15 @@ class CalendarQuery:
         )
         events_by_day = {}
         for row in db_response:
+            if row.get("repeat_data"):
+                repeat = Repeat(
+                        **(
+                            row.get("repeat_data")
+                            if row.get("repeat_data") is not None
+                            else {}
+                        ))
+            else:
+                repeat = None
             event = CalendarHumanReadable(
                 id=row.get("id"),
                 title=row.get("title"),
@@ -58,13 +67,8 @@ class CalendarQuery:
                 day_event_start=row.get("start_time"),
                 end_time=row.get("end_time"),
                 event_status=row.get("event_status"),
-                repeat=Repeat(
-                    **(
-                        row.get("repeat_data")
-                        if row.get("repeat_data") is not None
-                        else {}
-                    )
-                ),
+                repeat=repeat
+                
             )
 
             event_date = row.get("event_date")
