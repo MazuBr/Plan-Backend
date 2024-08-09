@@ -1,3 +1,5 @@
+import json
+
 import strawberry
 from strawberry.types import info
 
@@ -27,6 +29,7 @@ class CalendarQuery:
             to_timestamp(start_time) AS start_time,
             to_timestamp(end_time) AS end_time,
             repeat_data,
+            repeat_until, delay, repeat_type,
             status as event_status
         FROM
             calendar c
@@ -53,11 +56,11 @@ class CalendarQuery:
         for row in db_response:
             if row.get("repeat_data"):
                 repeat = Repeat(
-                        **(
-                            row.get("repeat_data")
-                            if row.get("repeat_data") is not None
-                            else {}
-                        ))
+                    repeat_data=json.dumps(row.get("repeat_data")),
+                    delay=row.get("delay"),
+                    repeat_until=row.get("repeat_until"),
+                    repeat_type=row.get("repeat_type"),
+                )
             else:
                 repeat = None
             event = CalendarHumanReadable(
@@ -67,8 +70,7 @@ class CalendarQuery:
                 day_event_start=row.get("start_time"),
                 end_time=row.get("end_time"),
                 event_status=row.get("event_status"),
-                repeat=repeat
-                
+                repeat=repeat,
             )
 
             event_date = row.get("event_date")
