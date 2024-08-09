@@ -137,7 +137,7 @@ class RepeatData:
     @classmethod
     def from_dict(cls, data: dict, type):
         try:
-            return cls(**data)
+            return data
         except TypeError as e:
             expected = cls.expected_keys()
             raise ValueError(
@@ -208,13 +208,12 @@ class InputRepeat:
     repeat_data: Optional[str] = None
 
     def get_repeat_data(self) -> RepeatDataType:
-        monthly_by_week_check = self.repeat_type == RepeatTypes.MONTHLY_BY_WEEK
-        print('monthly_by_week_check: ', monthly_by_week_check)
+        monthly_by_week_check = (self.repeat_type == RepeatTypes.MONTHLY_BY_WEEK)
         if self.repeat_data is None and not monthly_by_week_check:
             return None
         elif self.repeat_data is None and monthly_by_week_check:
             raise ValueError(
-                'Invalid data for RepeatTypes.MONTHLY_BY_WEEK: null, Expected keys "day_of_month"'
+                'Invalid data for RepeatTypes.MONTHLY_BY_WEEK: null, Expected keys "days_of_week": int, "week": int'
             )
         data = json.loads(self.repeat_data)
         if self.repeat_type == RepeatTypes.DAILY:
@@ -224,9 +223,9 @@ class InputRepeat:
         elif self.repeat_type == RepeatTypes.MONTHLY:
             return RepeatDataMonthly.from_dict(data, self.repeat_type)
         elif monthly_by_week_check:
-            return RepeatDataMonthly.from_dict(data, self.repeat_type)
+            return RepeatDataMonthlyByWeek.from_dict(data, self.repeat_type)
         elif self.repeat_type == RepeatTypes.YEARLY:
-            return RepeatDataMonthly.from_dict(data, self.repeat_type)
+            return RepeatDataYearly.from_dict(data, self.repeat_type)
         else:
             raise ValueError("Unknown repeat type")
 
